@@ -75,7 +75,11 @@ Use these exact settings to match your lab desktop environment:
    It will turn on/off every second.
 
 8. **Try the Reset Button**  
-   Press the **EN** button on your board. The program will restart.
+   Press the **EN** button (silver and black left side) on your board. The program will restart.
+
+9. 💡 Classroom Tip:
+“If you ever want to stop your sketch from running (like the blinking won’t stop), upload an empty sketch. This pauses all activity and gives you a clean board.”
+
 
 ---
 
@@ -93,5 +97,6 @@ Use these exact settings to match your lab desktop environment:
 - [ ] LED is blinking
 - [ ] Welcome message appears in Serial Monitor
 - [ ] Reset button restarts the program
+- [ ] Upload a blank script to clean the board.
 
 You're ready to move on to **servo control or FSM labs**! 🧠💡
