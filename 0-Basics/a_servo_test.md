@@ -42,4 +42,26 @@ If you prefer GitHub:
 
 ---
 
-Let me know if you'd like a test-only `.ino` that confirms the PCA9685 is connected and responsive before mixing in servos or steppers.
+✅ 1. #include <Arduino.h>
+📦 Built-in with the Arduino core.
+
+✅ No action needed.
+
+✅ 2. #include <Wire.h>
+This is the I2C library, also built-in.
+
+✅ No install needed.
+
+✅ 3. #include <Adafruit_PWMServoDriver.h>
+❗ YES – You need to install this manually.
+
+📌 Use the Library Manager or install via GitHub.
+
+Search for: “Adafruit PWM Servo Driver”
+
+✅ 4. #include <ESP32Servo.h>
+❗ YES – Must install manually.
+
+📌 In Library Manager, search: “ESP32Servo”
+
+Sometimes named: “ESP32Servo by Kevin Harrington
