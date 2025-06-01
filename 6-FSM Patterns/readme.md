@@ -131,6 +131,39 @@ switch (currentState) {
 
 ---
 
+🌐 The Bigger Picture: DSAI Camp + Pattern Design Goals
+🔭 Ultimate Goal
+Help students learn how to:
+
+Work with hardware using repeatable patterns
+
+Write modular, chainable code that can be extended
+
+Understand state logic, control flow, and parameterized actions
+
+Transition smoothly from blinking LEDs → controlling servos → logging data → forecasting events
+
+🧩 This Pattern's Role in the Bigger System
+Pattern	Teaches	Prepares Students For
+State Machine	Logic structuring, transitions, modular design	FSMs in robotics, UIs, network protocols
+Controlled Pins	Resource cleanup, modular hardware logic	Multi-component systems (servos, motors, sensors)
+Action Parameters	Function configuration, delayed effects	Timed servo motions, alerts, recordings
+Function Tables (handlers)	Decoupling logic from execution	Event-driven design, interpreters, APIs
+Named States / Config Tables	Declarative programming	JSON-driven projects, workflows
+onEnter / onExit Hooks	Lifecycle management	Task chaining, microservice thinking
+
+🎓 Teachable Expansion Points
+Here’s how to keep it student-friendly and expandable:
+
+| Concept                 | How We Teach It                                              |
+| ----------------------- | ------------------------------------------------------------ |
+| `StateConfig`           | “Each row = a step in your machine”                          |
+| `controlledPins[]`      | “These are the lights, sensors, or motors used in this step” |
+| `handler()`             | “This is the behavior to run while in this step”             |
+| `duration`              | “How long should this step last?”                            |
+| `next`                  | “Where do we go next?”                                       |
+| `onEnter` / `onExit`    | “Prep and cleanup code”                                      |
+| (future) `ActionParams` | “Extra options like servo angle or logging flags”            |
 
 
 
