@@ -1,3 +1,79 @@
+# b_stepper_servo_test.md
+
+## 🚀 Stepper Motor + Servo Testing Guide
+Welcome to the ULN2003 + PCA9685 test lab for Artemis DSAI 2025 Camp! Use this to verify wiring, test motion, and begin interactive control using your ESP32-S3 kit.
+
+---
+
+## ✅ Step 1: Blink Test for ULN2003 LEDs
+This confirms your **IN1–IN4 pins are correctly connected** and the ULN2003 board is receiving signals.
+
+📌 **We updated the pins to:**
+- IN1 → GPIO **9**
+- IN2 → GPIO **10**
+- IN3 → GPIO **11**
+- IN4 → GPIO **12**
+
+---
+
+### 🔧 Sample Sketch: `b_stepper_servo_blink.ino`
+```cpp
+/**********************************************************************
+ * File       : b_blink_test_unl2003_servo.ino
+ * Title      : ULN2003 Board LED Blink Test
+ * Author     : Rudy Martin / Next Shift Consulting
+ * Project    : Artemis DSAI 2025 Camp – Hardware Check
+ * Description: Blinks the 4 LEDs on the ULN2003 board one at a time
+ **********************************************************************/
+
+#define IN1 9
+#define IN2 10
+#define IN3 11
+#define IN4 12
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("🔌 ULN2003 LED Test Starting...");
+
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  Serial.println("✅ Pins configured. Blinking LEDs on ULN2003...");
+}
+
+void loop() {
+  digitalWrite(IN1, HIGH); delay(300);
+  digitalWrite(IN1, LOW);
+
+  digitalWrite(IN2, HIGH); delay(300);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, HIGH); delay(300);
+  digitalWrite(IN3, LOW);
+
+  digitalWrite(IN4, HIGH); delay(300);
+  digitalWrite(IN4, LOW);
+}
+```
+
+---
+
+## 🧪 After Blinking Works
+Move on to half-step or full-step motion. Add potentiometer input for speed control, and test direction with `moveSteps()`.
+
+Need help wiring dual power safely? See the diagram above or ask a TA!
+
+---
+
+✅ **Tip:** Always share GND between ESP32, PCA9685, and ULN2003 when using multiple power sources.
+
+Happy debugging and blinking!
+
+
+
+
 | ULN2003 Pin | ESP32-S3 GPIO   | Notes                  |
 | ----------- | --------------- | ---------------------- |
 | `IN1`       | GPIO **11**     | Step 1 control         |
