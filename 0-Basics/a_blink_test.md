@@ -26,7 +26,7 @@ Use these exact settings to match your lab desktop environment:
 | **Erase Flash Before Upload** | `Enabled`                  |
 | **Serial Monitor Baud Rate** | `115200`                    |
 
-[![ESP Config](https://github.com/RudyMartin/esp32/blob/main/0-Basics/Arduino_Configuration.png)](https://github.com/RudyMartin/esp32/blob/main/0-Basics/Arduino_Configuration.png)
+![ESP Config](Arduino_Configuration.png)
 
 ---
 
@@ -101,4 +101,11 @@ Use these exact settings to match your lab desktop environment:
 - [ ] Welcome message appears in Serial Monitor
 - [ ] Reset button restarts the program
 
-You're ready to move on to **servo control or FSM labs**! 🧠💡
+You're ready to move on to **servo control, stepper motors, or FSM labs**! 🧠💡
+
+Next file: `b_servo_stepper_test.ino` lets you:
+- Test **GPIO servo**, **PCA9685 servo**, or a **stepper motor**
+- Select hardware via `test_mode = 1, 2, or 3`
+- Print output to Serial Monitor so you know what’s active
+
+Run this after `a_blink_test.ino` to validate motor connections!
