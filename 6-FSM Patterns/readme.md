@@ -41,6 +41,36 @@ Or in our case:
 
 ---
 
+GOAL: Modular State Machine with Config Table
+We’ll define each state in a structured config dictionary (or table) that includes:
+
+Duration (optional or zero = manual transition)
+
+Behavior function
+
+Next state (or use conditional logic later)
+
+Then the loop() simply:
+
+Looks up the current state in the table
+
+Runs the state's function
+
+Checks if it's time to transition
+
+Switches to the next state accordingly
+
+| Feature           | Why it helps students                             |
+| ----------------- | ------------------------------------------------- |
+| Config-driven     | Students edit a table, not code internals         |
+| Named functions   | Easier to organize per behavior                   |
+| Extendable        | Add/remove states without touching the loop logic |
+| Clear transitions | States define their own "next"                    |
+
+
+
+
+
 ## 👨‍🏫 Lesson Outline Using State Machine
 
 | Time      | Activity                                                                            |
