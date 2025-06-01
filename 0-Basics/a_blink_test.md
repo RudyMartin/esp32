@@ -6,7 +6,7 @@ Make sure your ESP32-S3 board is working correctly by:
 - Uploading the `blink.ino` program
 - Seeing it blink an LED
 - Reading personalized messages in the Serial Monitor
-- Pressing the "RESET" / "EN" button (silver and black left side) to restart the program
+- Pressing the reset button to restart the program
 
 ---
 
@@ -26,7 +26,7 @@ Use these exact settings to match your lab desktop environment:
 | **Erase Flash Before Upload** | `Enabled`                  |
 | **Serial Monitor Baud Rate** | `115200`                    |
 
-[![Freenove ESP32S3 Config](https://github.com/RudyMartin/esp32/blob/main/0-Basics/Arduino_Configuration.png)](https://github.com/RudyMartin/esp32/blob/main/0-Basics/Arduino_Configuration.png)]
+[![ESP Config](https://github.com/RudyMartin/esp32/blob/main/0-Basics/Arduino_Configuration.png)](https://github.com/RudyMartin/esp32/blob/main/0-Basics/Arduino_Configuration.png)
 
 ---
 
@@ -56,14 +56,14 @@ Use these exact settings to match your lab desktop environment:
    ```
 
 4. **Set Arduino Board & Port**  
-   - Tools → Board → `ESP32S3 Dev Module`
+   - Tools → Board → `ESP32S3 Dev Module`  
    - Tools → Port → `COMx` (usbserial device)
 
 5. **Upload the Code**  
    Click the ▶️ Upload button. Wait for "Done uploading."
 
 6. **Open Serial Monitor**  
-   Tools → Serial Monitor → Set baud to `115200`
+   Tools → Serial Monitor → Set baud to `115200`  
    You should see:
    ```
    💡 Artemis Lab 1: Blink Test
@@ -71,15 +71,16 @@ Use these exact settings to match your lab desktop environment:
    ✅ Your ESP32-S3 is working and the LED is blinking.
    ```
 
-7. **Watch the LED Blink**
+7. **Watch the LED Blink**  
    It will turn on/off every second.
 
-8. **Try the Reset Button**  
-   Press the **EN** button (silver and black left side) on your board. The program will restart.
+8. **Press Reset Safely**  
+   Use the **EN** (reset) button to restart the program.  
+   ✅ Tip: You can use the **rubber end of a pencil** — it’s safe and won’t damage the board!
 
-9. 💡 Classroom Tip:
-“If you ever want to stop your sketch from running (like the blinking won’t stop), upload an empty sketch. This pauses all activity and gives you a clean board.”
-
+9. **Clear the Board (Optional)**  
+   Load an empty sketch to clear the board completely.  
+   👉 File: `esp/clear_board.ino` (or check the **helpers** folder)
 
 ---
 
@@ -87,6 +88,8 @@ Use these exact settings to match your lab desktop environment:
 - Serial Monitor shows nothing? → Check your COM port + baud = `115200`
 - Upload fails? Try holding BOOT while clicking upload, then release.
 - No blinking? Check if LED is on a different GPIO (e.g., 10 or 2)
+- Did the program start running *before* Arduino IDE said "Done uploading"?  
+  👉 That’s normal! The ESP32 reboots quickly once flashed — even before the IDE finishes updating the status.
 
 ---
 
@@ -97,6 +100,5 @@ Use these exact settings to match your lab desktop environment:
 - [ ] LED is blinking
 - [ ] Welcome message appears in Serial Monitor
 - [ ] Reset button restarts the program
-- [ ] Upload a blank script to clean the board.
 
 You're ready to move on to **servo control or FSM labs**! 🧠💡
