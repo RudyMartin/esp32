@@ -195,6 +195,8 @@ void setup() {
 }
 
 void loop() {
+  // ==== STEP 5: REPEAT ====
+  // Continuously loops through the FSM states based on time and transitions
   unsigned long now = millis();
   StateConfig current = states[currentStateIndex];
   current.handler();
@@ -213,3 +215,4 @@ void loop() {
     if (states[currentStateIndex].onEnter) states[currentStateIndex].onEnter();
   }
 }
+
