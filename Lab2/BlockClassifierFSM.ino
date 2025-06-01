@@ -8,11 +8,17 @@
 
 /*
 MCP (Model Context Protocol) Overview:
-Step 1: SENSE      - Capture an image using the onboard camera
-Step 2: THINK      - Classify the image using ML or fallback logic
-Step 3: DECIDE     - Prepare and print result JSON (or upload)
-Step 4: WAIT       - Brief delay between loops
-Step 5: REPEAT     - Loop back to start and process the next object
+This program acts like a mini-robot brain following a simple plan.
+It cycles through a series of steps to continuously monitor its surroundings,
+understand them, and then perform actions based on that understanding.
+
+Think of it as this 5-step process:
+
+Step 1: SENSE    - Like opening your eyes! The system gathers fresh information from the world.
+Step 2: THINK    - Using smarts (like AI models), the system processes the information to understand it.
+Step 3: DECIDE   - Based on what it now understands, the system figures out what its next important action should be.
+Step 4: EXECUTE  - The system performs the action it decided on. This might be doing something active, or just pausing to pace itself.
+Step 5: REPEAT   - Go back to SENSE and start the whole cycle again, always learning and acting.
 */
 
 #include <Arduino.h>
