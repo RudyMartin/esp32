@@ -1,7 +1,8 @@
 /**********************************************************************
 * Filename    : BlockClassifierFSM.ino
 * Description : Lab 2 - FSM-based Image Capture and Classification
-* Author      : Next Shift / DSAI Camp
+* Author      : Rudy Martin / Next Shift Consulting
+* Project     : Artemis DSAI 2025 Camp
 * Modified    : 2025-05-31
 **********************************************************************/
 
