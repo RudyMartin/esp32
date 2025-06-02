@@ -1,6 +1,6 @@
 /**********************************************************************
  * File       : c_servo_test.ino
- * Title      : Servo Menu + Full Sweep Test
+ * Title      : Servo Menu + Full Sweep Test (with Timeout)
  * Author     : Rudy Martin / Next Shift Consulting
  * Project    : Artemis DSAI 2025 Camp
  * Description: Menu to test either a GPIO-based servo or sweep all
@@ -21,15 +21,16 @@ Servo gpioServo;
 String username = "student";
 int mode = 0;
 
-// === Menu ===
+// === Menu Display ===
 void showMenu() {
   Serial.println("\n====== Servo Test Menu ======");
   Serial.println("1. GPIO Servo Test (SG92R on GATE_SERVO_PIN)");
   Serial.println("2. PCA9685 Full Sweep (6-DOF Robot Arm)");
   Serial.println("Enter your choice (1–2): ");
+  Serial.println("⌛ Waiting 10 seconds for input... default = 1");
 }
 
-// === PCA Sweep Helper ===
+// === Servo Test (PCA9685)
 void testServo(int channel, int minAngle, int maxAngle, const ServoSpecs& specs) {
   Serial.printf("🎯 Testing channel %d: %d° to %d°\n", channel, minAngle, maxAngle);
   int minPulse = specs.minPulse;
@@ -47,36 +48,54 @@ void testServo(int channel, int minAngle, int maxAngle, const ServoSpecs& specs)
   delay(500);
 }
 
+// === Setup with Timeout Menu ===
 void setup() {
   Serial.begin(115200);
   delay(3000);
   Serial.printf("\n🎓 Hello %s! Welcome to Servo Tester.\n", username.c_str());
 
+  unsigned long startTime = millis();
+  bool inputReceived = false;
   showMenu();
-  while (mode == 0) {
+
+  while ((millis() - startTime) < 10000) {
     if (Serial.available()) {
       String input = Serial.readStringUntil('\n');
       input.trim();
-      mode = input.toInt();
-      if (mode < 1 || mode > 2) {
-        Serial.println("❌ Invalid choice. Please enter 1 or 2.");
-        mode = 0;
+      int selection = input.toInt();
+      if (selection >= 1 && selection <= 2) {
+        mode = selection;
+        inputReceived = true;
+        Serial.printf("✅ Selected mode %d\n", mode);
+        break;
+      } else {
+        Serial.println("❌ Invalid input. Try again.");
         showMenu();
+        startTime = millis();  // reset timeout window
       }
     }
+    delay(100);
   }
 
+  if (!inputReceived) {
+    mode = 2;
+    Serial.println("⏱️ No input received. Defaulting to mode 2 (PCA9685 Full Sweep)");
+  }
+
+  // Initialize selected mode
   if (mode == 1) {
     Serial.println("🔧 GPIO Servo Test Selected");
-    gpioServo.attach(SERVO_GATE_PIN);  // e.g. SG92R
+    gpioServo.attach(SERVO_GATE_PIN);
   } else if (mode == 2) {
+    Serial.println("Entering Default Mode");
     Serial.println("🔧 PCA9685 Full Sweep Test Selected");
     pwm.begin();
-    pwm.setPWMFreq(50); // Standard analog servo freq
+    pwm.setPWMFreq(50);  // Standard analog servo frequency
     delay(500);
   }
 }
 
+// === Loop: Run Mode
 void loop() {
   if (mode == 1) {
     gpioServo.write(0);
@@ -85,8 +104,8 @@ void loop() {
     gpioServo.write(180);
     Serial.println("[GPIO Servo] → 180°");
     delay(1000);
-  } else if (mode == 2) {
-    // Sweep all configured PCA channels
+  } 
+  else if (mode == 2) {
     testServo(SERVO_BASE_CHANNEL,         SERVO_BASE_MIN_ANGLE,         SERVO_BASE_MAX_ANGLE,         SERVO_BASE_TYPE);
     testServo(SERVO_SHOULDER_CHANNEL,     SERVO_SHOULDER_MIN_ANGLE,     SERVO_SHOULDER_MAX_ANGLE,     SERVO_SHOULDER_TYPE);
     testServo(SERVO_ELBOW_CHANNEL,        SERVO_ELBOW_MIN_ANGLE,        SERVO_ELBOW_MAX_ANGLE,        SERVO_ELBOW_TYPE);
