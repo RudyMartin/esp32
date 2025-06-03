@@ -1,5 +1,5 @@
 /**********************************************************************
- * File       : 1-BlinkRotateFSM.ino
+ * File       : 2.1-BlinkRotateFSM.ino
  * Title      : MCP/FSM Example – Blink + Rotate
  * Author     : Rudy Martin / Next Shift Consulting
  * Description: Intro to FSM with LED blink and rotation
