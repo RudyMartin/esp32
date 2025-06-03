@@ -1,13 +1,3 @@
-#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-#include <ESP32-HUB75-VirtualMatrixPanel_T.hpp>
-#include <ESP32-VirtualMatrixPanel-I2S-DMA.h>
-
-#include <FS.h>
-#include <FSImpl.h>
-#include <vfs_api.h>
-
-#include <SPIFFS.h>
-
 /**********************************************************************
  * Filename    : MissionCrew_Lab3.ino
  * Description : SEE/THINK/ACT/SPEAK/REPEAT LED Matrix (64x64 HUB75)
@@ -16,21 +6,25 @@
  * Modified    : Jun 3, 2025   
  **********************************************************************/
 
-// === AGENT LIST (Simplified + Swappable) ===
-// DataCleaner     → Filters image files by extension
-// DirectiveLoader → Reads mission directive JSON
-// ImageHandler    → Draws content to matrix
-// PipelineSelector→ Chooses image source (SPIFFS or headers)
-// LoopManager     → Runs display cycles based on policy
-
-
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <FS.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
 
+// === FSM STATE LOGIC ===
+enum SystemState { SEE, THINK, ACT, SPEAK, REPEAT };
+SystemState currentState = SEE;
 
-// === Agent Registry (Swappable Agent Pattern) ===
+// === Display Setup ===
+MatrixPanel_I2S_DMA* dma_display = nullptr;
+MatrixPanel_Config config;
+
+// === SEE ===
+String imageDirectory = "/images/";
+String current_directive = "default";
+unsigned long wait_time = 3000;
+
+// === AGENT REGISTRY ===
 typedef void (*AgentFunc)(String param);
 
 struct Agent {
@@ -38,8 +32,13 @@ struct Agent {
   AgentFunc run;
 };
 
-void displayImageAgent(String filename) { process_image(filename); }
-void dummyAgent(String param) { Serial.println("[AGENT] No-op"); }
+void displayImageAgent(String filename) {
+  Serial.println("[ImageHandler] Would display: " + filename);
+  // TODO: Implement actual image drawing
+}
+void dummyAgent(String param) {
+  Serial.println("[AGENT] No-op");
+}
 
 Agent agentRegistry[] = {
   {"ImageHandler", displayImageAgent},
@@ -48,50 +47,47 @@ Agent agentRegistry[] = {
 };
 
 Agent* getAgent(String name) {
-  for (int i = 0; i < sizeof(agentRegistry)/sizeof(agentRegistry[0]); i++) {
+  for (int i = 0; i < sizeof(agentRegistry) / sizeof(agentRegistry[0]); i++) {
     if (agentRegistry[i].name == name) return &agentRegistry[i];
   }
   return nullptr;
 }
 
-// === SEE/THINK/ACT/SPEAK/REPEAT FORMAT ===
-// SEE     → Perceive panel structure and listen for incoming data
-// THINK   → Process local input or updated directives from Mission Control
-// ACT     → Trigger behaviors based on edge decision-making
-// SPEAK   → Log or transmit selected outputs or acknowledgments
-// REPEAT  → Cycle behavior, check for updates, adapt routines
-// =======================================================
-// NOTE: This architecture assumes agentic behavior at the edge
+// === INIT ===
+void setup() {
+  Serial.begin(115200);
 
-// === FSM STATE LOGIC ===
-enum SystemState { SEE, THINK, ACT, SPEAK, REPEAT };
-SystemState currentState = SEE;
+  if (!SPIFFS.begin(true)) {
+    Serial.println("[SPIFFS] Mount failed.");
+    return;
+  }
 
-// === SEE ===
-String imageDirectory = "/images/";  // Local SPIFFS path
-MatrixPanel_Config config;
-config.mx_width = 64;
-config.mx_height = 64;
-config.chain_length = 1;
-unsigned long wait_time = 3000;  // adjustable later
+  // Configure display
+  config.mx_width = 64;
+  config.mx_height = 64;
+  config.chain_length = 1;
 
-// === GPIO Configuration ===
-config.gpio.r1 = 25;
-config.gpio.g1 = 26;
-config.gpio.b1 = 27;
-config.gpio.r2 = 14;
-config.gpio.g2 = 12;
-config.gpio.b2 = 13;
-config.gpio.a = 23;
-config.gpio.b = 22;
-config.gpio.c = 5;
-config.gpio.d = 17;
-config.gpio.e = 32;
-config.gpio.lat = 4;
-config.gpio.oe  = 15;
-config.gpio.clk = 16;
+  config.gpio.r1 = 25;
+  config.gpio.g1 = 26;
+  config.gpio.b1 = 27;
+  config.gpio.r2 = 14;
+  config.gpio.g2 = 12;
+  config.gpio.b2 = 13;
+  config.gpio.a = 23;
+  config.gpio.b = 22;
+  config.gpio.c = 5;
+  config.gpio.d = 17;
+  config.gpio.e = 32;
+  config.gpio.lat = 4;
+  config.gpio.oe = 15;
+  config.gpio.clk = 16;
 
-String current_directive = "default";
+  dma_display = new MatrixPanel_I2S_DMA(config);
+  dma_display->begin();
+  dma_display->setBrightness8(64);
+
+  Serial.println("[INIT] System initialized.");
+}
 
 void loadMissionDirective() {
   File file = SPIFFS.open("/mission_directive.json", "r");
@@ -99,21 +95,18 @@ void loadMissionDirective() {
     Serial.println("[THINK] No mission directive found. Using defaults.");
     return;
   }
+
   StaticJsonDocument<256> doc;
   DeserializationError error = deserializeJson(doc, file);
   if (error) {
     Serial.println("[THINK] Failed to parse mission directive JSON.");
     return;
   }
+
   current_directive = doc["policy"] | "default";
   Serial.println("[THINK] Mission Control policy updated: " + current_directive);
   file.close();
 }
-
-// === ACTION SETUP ===
-dma_display = new MatrixPanel_I2S_DMA(config);
-dma_display->begin();
-dma_display->setBrightness8(64);
 
 void process_image(String filename) {
   Agent* imgAgent = getAgent("ImageHandler");
@@ -131,20 +124,25 @@ bool useSpiffs() {
     Serial.println("[SPIFFS] Failed to open image directory.");
     return false;
   }
+
   File file = root.openNextFile();
   int fileCount = 0;
+
   while (file && fileCount < 10) {
     if (!isImageFile(file.name())) {
       file = root.openNextFile();
       continue;
     }
+
     String name = file.name();
     Serial.println("[SPIFFS] Displaying: " + name);
     process_image(name);
     delay(20000);
+
     file = root.openNextFile();
     fileCount++;
   }
+
   return fileCount > 0;
 }
 
@@ -152,6 +150,7 @@ void useHeaders() {
   Serial.println("[PIPELINE] Defaulting to header-based image pipeline.");
   String filenames[] = {"cat64.h", "fire.h", "ThisIsFine64.h"};
   int fileCount = sizeof(filenames) / sizeof(filenames[0]);
+
   for (int cycle = 0; cycle < 10; cycle++) {
     for (int i = 0; i < fileCount; i++) {
       process_image(filenames[i]);
@@ -209,6 +208,3 @@ void loop() {
   }
 }
 
-// === NOTE: PHYSICAL GROUNDING ===
-// Ground is required physically — no code line for GND.
-// Connect ESP32 GND to HUB75 GND and shared PSU ground.
