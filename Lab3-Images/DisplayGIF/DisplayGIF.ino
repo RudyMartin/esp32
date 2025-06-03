@@ -1,3 +1,11 @@
+#include <AnimatedGIF.h>
+
+#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+// define in the includes if uncommented causes errors
+// #include <ESP32-HUB75-VirtualMatrixPanel_T.hpp>
+// #include <ESP32-VirtualMatrixPanel-I2S-DMA.h>
+
+
 /*******************************************************************
     Displays gifs on a matrix display
 
@@ -23,7 +31,31 @@
       YouTube: https://www.youtube.com/brianlough
       Tindie: https://www.tindie.com/stores/brianlough/
       Twitter: https://twitter.com/witnessmenow
+
+
+      BEFORE YOU START be sure your images are in this directory
+
+       cat.h, 
+
+       ALSO Install __> ESP32-HUB75-MatrixPanel-I2S-DMA
+
+       GOTO 
+
+       https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA
+
+       DOWNLOAD ZIP AND USE Sketch
+
  *******************************************************************/
+
+
+#include <Adafruit_GFX.h>
+#include <Adafruit_GrayOLED.h>
+#include <Adafruit_SPITFT.h>
+#include <Adafruit_SPITFT_Macros.h>
+#include <gfxfont.h>
+
+#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+
 
 // ----------------------------
 // Include Other Tabs
@@ -38,13 +70,14 @@
 // Additional Libraries - each one of these will need to be installed.
 // ----------------------------
 
-#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+
 // This is the library for interfacing with the display
 
 // Can be installed from the library manager (Search for "ESP32 MATRIX DMA")
-// https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-I2S-DMA
+// https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-DMA
 
 #include <AnimatedGIF.h>
+
 // Library for decoding GIFs on Arduino
 
 // Search for "AnimatedGIF" in the Arduino Library manager
