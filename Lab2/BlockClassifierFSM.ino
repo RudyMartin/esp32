@@ -9,10 +9,9 @@
 /*
 MCP (Model Context Protocol) Overview:
 This program acts like a mini-robot brain following a simple plan.
+
 It cycles through a series of steps to continuously monitor its surroundings,
-understand them, and then perform actions based on that understanding.
-
-
+understand them, and then perform actions based on that understanding:
 
 Step 1: SENSE "SEE"   - Like opening your eyes! The system gathers fresh information from the world.
 Step 2: PLAN  "THINK"  - Using smarts (like AI models), the system processes the information to understand it.
@@ -61,32 +60,23 @@ String label = "unknown";           // The predicted label (e.g., "red_tall")
 float confidence = 0.0;             // How confident the model is (from 0.0 to 1.0)
 bool usedFallback = false;          // True if a real ML model wasn’t used (fallback was random)
 
-
-// === Camera Config ===
+// === SEE: Setup the camera ===
 void setupCamera() {
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
-  config.pin_d0 = 5;
-  config.pin_d1 = 18;
-  config.pin_d2 = 19;
-  config.pin_d3 = 21;
-  config.pin_d4 = 36;
-  config.pin_d5 = 39;
-  config.pin_d6 = 34;
-  config.pin_d7 = 35;
-  config.pin_xclk = 0;
-  config.pin_pclk = 22;
-  config.pin_vsync = 25;
-  config.pin_href = 23;
-  config.pin_sscb_sda = 26;
-  config.pin_sscb_scl = 27;
-  config.pin_pwdn = 32;
-  config.pin_reset = -1;
+  config.pin_d0 = 5; config.pin_d1 = 18;
+  config.pin_d2 = 19; config.pin_d3 = 21;
+  config.pin_d4 = 36; config.pin_d5 = 39;
+  config.pin_d6 = 34; config.pin_d7 = 35;
+  config.pin_xclk = 0; config.pin_pclk = 22;
+  config.pin_vsync = 25; config.pin_href = 23;
+  config.pin_sscb_sda = 26; config.pin_sscb_scl = 27;
+  config.pin_pwdn = 32; config.pin_reset = -1;
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
 
-  if(psramFound()) {
+  if (psramFound()) {
     config.frame_size = FRAMESIZE_QVGA;
     config.jpeg_quality = 10;
     config.fb_count = 2;
@@ -96,15 +86,14 @@ void setupCamera() {
     config.fb_count = 1;
   }
 
-  esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
+  if (esp_camera_init(&config) != ESP_OK) {
+    Serial.println("[ERROR] Camera initialization failed.");
     return;
   }
-  Serial.println("[CAMERA] Initialized");
+  Serial.println("[CAMERA] Ready.");
 }
 
-// === WiFi Setup ===
+// === Setup WiFi (Optional) ===
 void setupWiFi() {
   if (!config.enable_wifi) return;
   WiFi.begin(config.wifi_ssid, config.wifi_password);
@@ -117,66 +106,60 @@ void setupWiFi() {
   Serial.println(WiFi.localIP());
 }
 
+// === Show Config ===
 void configValidator() {
-  Serial.println("===== CONFIG VALIDATOR =====");
-  Serial.printf("Source: %s\n", config.source);
-  Serial.printf("Sensor: %s\n", config.sensor);
-  Serial.printf("Model : %s\n", config.model);
-  Serial.printf("Experiment: %s\n", config.experiment);
-  Serial.printf("Main NAS folder: %s\n", config.nas_main_folder);
-  Serial.printf("Group NAS folder: %s\n", config.nas_group_folder);
+  Serial.println("===== CONFIG =====");
+  Serial.printf("Source      : %s\n", config.source);
+  Serial.printf("Sensor      : %s\n", config.sensor);
+  Serial.printf("Model       : %s\n", config.model);
+  Serial.printf("Experiment  : %s\n", config.experiment);
+  Serial.printf("Main Folder : %s\n", config.nas_main_folder);
+  Serial.printf("Group Folder: %s\n", config.nas_group_folder);
   Serial.printf("WiFi Enabled: %s\n", config.enable_wifi ? "true" : "false");
-  Serial.println("=============================");
+  Serial.println("===================");
 }
 
-// === State Declarations ===
-void captureState();
-void classifyState();
-void transmitState();
-void waitState();
+// === FSM State Declarations ===
+void captureState();    // SEE
+void classifyState();   // THINK
+void transmitState();   // SPEAK
+void waitState();       // DO (pause before repeating)
 
-// === State Configurations ===
-void enterCapture() {
-  Serial.println("[FSM] Capturing image...");
-}
+void enterCapture()   { Serial.println("[FSM] SEE: Capturing image..."); }
+void enterClassify()  { Serial.println("[FSM] THINK: Running classification..."); }
+void enterTransmit()  { Serial.println("[FSM] SPEAK: Sending result..."); }
 
-void enterClassify() {
-  Serial.println("[FSM] Running classification...");
-}
+// === FSM State Logic ===
 
-void enterTransmit() {
-  Serial.println("[FSM] Uploading to NAS...");
-}
-
-// ==== STEP 1: SENSE ====
+// === SEE ===
 void captureState() {
   camera_fb_t * fb = esp_camera_fb_get();
   if (!fb) {
-    Serial.println("[ERROR] Camera capture failed");
+    Serial.println("[ERROR] Could not capture image.");
     return;
   }
-  Serial.printf("[CAPTURED] Image size: %d bytes\n", fb->len);
+  Serial.printf("[SEE] Captured %d bytes\n", fb->len);
   esp_camera_fb_return(fb);
 }
 
-// ==== STEP 2: THINK ====
+// === THINK ===
 void classifyState() {
-  // Simulate ML classification with fallback
+  // Simulated ML classification
   String labels[] = {"red_tall", "blue_short", "green_round", "yellow_square", "purple_triangle"};
   int num_classes = sizeof(labels) / sizeof(labels[0]);
 
-  if (/* model available */ false) {
-    // TODO: Add TFLite classifier logic
+  if (/* real model not available */ false) {
+    // TODO: Add real TFLite model here
   } else {
     usedFallback = true;
     int predictedIndex = random(0, num_classes);
     label = labels[predictedIndex];
     confidence = random(70, 100) / 100.0;
-    Serial.printf("[FALLBACK] %s (%.2f)\n", label.c_str(), confidence);
+    Serial.printf("[THINK] (Fallback) %s (%.2f)\n", label.c_str(), confidence);
   }
 }
 
-// ==== STEP 3: DECIDE ====
+// === SPEAK ===
 void transmitState() {
   unsigned long timestamp = millis();
   String model_used = usedFallback ? "default" : config.model;
@@ -187,45 +170,55 @@ void transmitState() {
                   " \"source\": \"" + config.source + "\"," +
                   " \"sensor\": \"" + config.sensor + "\"," +
                   " \"model\": \"" + model_used + "\" }";
+
   Serial.println(result);
 }
 
-// ==== STEP 4: WAIT ====
+// === DO (Just wait a little before looping again) ===
 void waitState() {
-  // No-op pause state
+  // Intentional pause before repeating
 }
 
+// === FSM State Table ===
 StateConfig states[] = {
-  { "CAPTURE",   captureState,   1000, "CLASSIFY", enterCapture, nullptr },
-  { "CLASSIFY",  classifyState,  1000, "TRANSMIT", enterClassify, nullptr },
-  { "TRANSMIT",  transmitState,  1000, "WAIT",     enterTransmit, nullptr },
-  { "WAIT",      waitState,      2000, "CAPTURE",  nullptr, nullptr }
+  { "SEE",       captureState,   1000, "THINK",    enterCapture, nullptr },
+  { "THINK",     classifyState,  1000, "SPEAK",    enterClassify, nullptr },
+  { "SPEAK",     transmitState,  1000, "DO",       enterTransmit, nullptr },
+  { "DO",        waitState,      2000, "SEE",      nullptr, nullptr }
 };
+
 const int NUM_STATES = sizeof(states) / sizeof(StateConfig);
 
+// === SETUP ===
 void setup() {
   Serial.begin(115200);
   delay(500);
+
   setupCamera();
   setupWiFi();
   configValidator();
 
   Serial.print("[FSM] Starting in state: ");
   Serial.println(states[currentStateIndex].name);
+
   stateStartTime = millis();
-  if (states[currentStateIndex].onEnter) states[currentStateIndex].onEnter();
+  if (states[currentStateIndex].onEnter) {
+    states[currentStateIndex].onEnter();
+  }
 }
 
+// === LOOP: REPEAT ===
 void loop() {
-  // ==== STEP 5: REPEAT ====
-  // Continuously loops through the FSM states based on time and transitions
   unsigned long now = millis();
   StateConfig current = states[currentStateIndex];
-  current.handler();
 
+  current.handler(); // Run the function for current state
+
+  // Check if it's time to move to the next state
   if (current.duration > 0 && now - stateStartTime >= current.duration) {
     if (current.onExit) current.onExit();
 
+    // Find and switch to the next state
     for (int i = 0; i < NUM_STATES; i++) {
       if (strcmp(states[i].name, current.next) == 0) {
         currentStateIndex = i;
@@ -234,7 +227,9 @@ void loop() {
     }
 
     stateStartTime = millis();
-    if (states[currentStateIndex].onEnter) states[currentStateIndex].onEnter();
+    if (states[currentStateIndex].onEnter) {
+      states[currentStateIndex].onEnter();
+    }
   }
 }
 
