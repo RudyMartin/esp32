@@ -1,88 +1,52 @@
 /**********************************************************************
-* Filename    : 3-SensorLogFSM.ino
-* Description : FSM example for reading and logging sensor data
-* Author      : Next Shift / DSAI Camp
-* Modified    : 2025-05-31
-**********************************************************************/
+ * File       : 3-SensorLogFSM.ino
+ * Title      : MCP/FSM – Sensor Logger
+ * Author     : Rudy Martin / Next Shift Consulting
+ * Description: FSM that reads sensor values and logs them periodically
+ *              Emphasizes sensing and logging steps of MCP
+ **********************************************************************/
 
-#include <Arduino.h>
-#include "sensor_utils.h"
+// --- Sensor Config ---
+const int SENSOR_PIN = A0;    // Analog input
+const unsigned long INTERVAL = 1000;  // Log every 1s
 
-// === Pin Definitions ===
-#define SENSOR_PIN A0
-
-// === FSM Types ===
-typedef void (*StateHandler)();
-typedef void (*LifecycleHook)();
-
-struct StateConfig {
-  const char* name;
-  StateHandler handler;
-  unsigned long duration;
-  const char* next;
-  LifecycleHook onEnter;
-  LifecycleHook onExit;
+// --- FSM States ---
+enum State {
+  IDLE,
+  READ_SENSOR
 };
+State currentState = IDLE;
 
-// === FSM Variables ===
-int currentStateIndex = 0;
-unsigned long stateStartTime = 0;
-unsigned long lastActionTime = 0;
-
-// === Forward Declarations ===
-void readSensorState();
-void logSensorState();
-
-StateConfig states[] = {
-  { "READ_SENSOR", readSensorState, 1000, "LOG", nullptr, nullptr },
-  { "LOG", logSensorState, 1000, "READ_SENSOR", nullptr, nullptr }
-};
-const int NUM_STATES = sizeof(states) / sizeof(StateConfig);
-
-// === Sensor Data Storage ===
-float latestReading = 0.0;
-
-void readSensorState() {
-  latestReading = readAnalogSensor(SENSOR_PIN);
-  Serial.print("[READ] Sensor value: ");
-  Serial.println(latestReading);
-}
-
-void logSensorState() {
-  Serial.print("{ \"sensor\": \"A0\", \"value\": ");
-  Serial.print(latestReading);
-  Serial.println(" } // JSON-style log");
-}
+// --- Timing ---
+unsigned long lastLogTime = 0;
 
 void setup() {
   Serial.begin(115200);
   pinMode(SENSOR_PIN, INPUT);
-  Serial.print("Starting in state: ");
-  Serial.println(states[currentStateIndex].name);
-  stateStartTime = millis();
-  lastActionTime = millis();
-  if (states[currentStateIndex].onEnter) states[currentStateIndex].onEnter();
+  Serial.println("Sensor FSM Logger Initialized");
+  lastLogTime = millis();
 }
 
 void loop() {
   unsigned long now = millis();
-  StateConfig current = states[currentStateIndex];
 
-  current.handler();
-
-  if (current.duration > 0 && now - stateStartTime >= current.duration) {
-    if (current.onExit) current.onExit();
-
-    for (int i = 0; i < NUM_STATES; i++) {
-      if (strcmp(states[i].name, current.next) == 0) {
-        currentStateIndex = i;
-        break;
+  switch (currentState) {
+    case IDLE:
+      // MCP Step 1: SENSE (Check if time to read sensor)
+      if (now - lastLogTime >= INTERVAL) {
+        currentState = READ_SENSOR;  // MCP Step 2: PLAN
       }
-    }
+      break;
 
-    stateStartTime = millis();
-    lastActionTime = millis();
-    if (states[currentStateIndex].onEnter) states[currentStateIndex].onEnter();
+    case READ_SENSOR:
+      // MCP Step 3: ACT (Read + Print)
+      int value = analogRead(SENSOR_PIN);
+      Serial.print("Sensor Reading: ");
+      Serial.println(value);
+
+      // MCP Step 4: LOG (implicitly via Serial)
+      lastLogTime = now;
+      currentState = IDLE;  // MCP Step 5: REPEAT (loop back)
+      break;
   }
 }
-

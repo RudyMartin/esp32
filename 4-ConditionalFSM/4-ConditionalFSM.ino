@@ -1,100 +1,59 @@
 /**********************************************************************
-* Filename    : 4-ConditionalFSM.ino
-* Description : FSM with button-triggered state transition
-* Author      : Next Shift / DSAI Camp
-* Modified    : 2025-05-31
-**********************************************************************/
+ * File       : 4-ConditionalFSM.ino
+ * Title      : MCP/FSM – Button-Triggered State Machine
+ * Author     : Rudy Martin / Next Shift Consulting
+ * Description: Demonstrates an event-driven FSM
+ *              Uses button to trigger conditional transitions
+ **********************************************************************/
 
-#include <Arduino.h>
-#include "button_utils.h"
+// --- Pin Setup ---
+const int BUTTON_PIN = 2;  // Button input
+const int LED_PIN = 13;    // LED output
 
-#define BUTTON_PIN 12
-#define LED_PIN 2
-
-Button btn;
-
-// === FSM Types ===
-typedef void (*StateHandler)();
-typedef void (*LifecycleHook)();
-typedef bool (*AdvanceCheck)();
-
-struct StateConfig {
-  const char* name;
-  StateHandler handler;
-  unsigned long duration;
-  const char* next;
-  LifecycleHook onEnter;
-  LifecycleHook onExit;
-  AdvanceCheck shouldAdvance;
+// --- FSM States ---
+enum State {
+  WAIT_FOR_PRESS,
+  LED_ON
 };
-
-// === FSM State Vars ===
-int currentStateIndex = 0;
-unsigned long stateStartTime = 0;
-
-// === Declarations ===
-void idleState();
-void blinkState();
-bool buttonPressedCheck();
-
-StateConfig states[] = {
-  { "IDLE",  idleState, 0, "BLINK", nullptr, nullptr, buttonPressedCheck },
-  { "BLINK", blinkState, 3000, "IDLE", nullptr, nullptr, nullptr }
-};
-const int NUM_STATES = sizeof(states) / sizeof(StateConfig);
-
-// === State Functions ===
-void idleState() {
-  // Just wait for button
-  digitalWrite(LED_PIN, LOW);
-  Serial.println("IDLE... waiting for button press");
-  delay(200);
-}
-
-void blinkState() {
-  digitalWrite(LED_PIN, HIGH);
-  Serial.println("BLINKING!");
-}
-
-bool buttonPressedCheck() {
-  return isButtonPressed(btn);
-}
+State currentState = WAIT_FOR_PRESS;
 
 void setup() {
-  Serial.begin(115200);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
-  setupButton(btn, BUTTON_PIN);
-
-  Serial.print("Starting in state: ");
-  Serial.println(states[currentStateIndex].name);
-  stateStartTime = millis();
-  if (states[currentStateIndex].onEnter) states[currentStateIndex].onEnter();
+  Serial.begin(115200);
+  Serial.println("Conditional FSM Ready");
 }
 
 void loop() {
-  unsigned long now = millis();
-  StateConfig current = states[currentStateIndex];
+  // MCP Step 1: SENSE – read button
+  bool buttonPressed = digitalRead(BUTTON_PIN) == LOW;
 
-  current.handler();
-
-  bool shouldTransition = false;
-  if (current.shouldAdvance && current.shouldAdvance()) {
-    shouldTransition = true;
-  } else if (current.duration > 0 && now - stateStartTime >= current.duration) {
-    shouldTransition = true;
-  }
-
-  if (shouldTransition) {
-    if (current.onExit) current.onExit();
-
-    for (int i = 0; i < NUM_STATES; i++) {
-      if (strcmp(states[i].name, current.next) == 0) {
-        currentStateIndex = i;
-        break;
+  // MCP Step 2: PLAN – event-based decision
+  switch (currentState) {
+    case WAIT_FOR_PRESS:
+      if (buttonPressed) {
+        currentState = LED_ON;
+        Serial.println("Button Pressed → LED_ON State");  // MCP Step 4: LOG
       }
-    }
+      break;
 
-    stateStartTime = millis();
-    if (states[currentStateIndex].onEnter) states[currentStateIndex].onEnter();
+    case LED_ON:
+      if (!buttonPressed) {
+        currentState = WAIT_FOR_PRESS;
+        Serial.println("Button Released → WAIT_FOR_PRESS State");  // MCP Step 4: LOG
+      }
+      break;
   }
+
+  // MCP Step 3: ACT – state behavior
+  switch (currentState) {
+    case WAIT_FOR_PRESS:
+      digitalWrite(LED_PIN, LOW);
+      break;
+    case LED_ON:
+      digitalWrite(LED_PIN, HIGH);
+      break;
+  }
+
+  // MCP Step 5: REPEAT – loop continues
 }

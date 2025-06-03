@@ -1,120 +1,86 @@
 /**********************************************************************
-* Filename    : 5-MissionDeckFSM.ino
-* Description : Multi-step FSM combining sensor read, servo move, and logging
-* Author      : Next Shift / DSAI Camp
-* Modified    : 2025-05-31
-**********************************************************************/
+ * File       : 5-MissionDeckFSM.ino
+ * Title      : MCP/FSM – Full Mission Logic
+ * Author     : Rudy Martin / Next Shift Consulting
+ * Description: Pipeline FSM: Sense → Act → Log
+ *              Models a full robotics mission: detection → action → feedback
+ **********************************************************************/
 
-#include <Arduino.h>
-#include <Servo.h>
-#include "sensor_utils.h"
-#include "servo_utils.h"
-#include "ActionParams.h"
+// --- Pin + Servo Setup ---
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+const int SENSOR_PIN = A0;       // Simulated detection input
+const int LED_PIN = 13;          // Status indicator
+#define SERVO_CHANNEL 0
+#define SERVO_MIN 150
+#define SERVO_MAX 600
+#define SERVO_FREQ 50
 
-#define SENSOR_PIN A0
-#define SERVO_PIN 5
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
-Servo myServo;
-
-// === FSM Types ===
-typedef void (*StateHandler)();
-typedef void (*LifecycleHook)();
-
-struct StateConfig {
-  const char* name;
-  StateHandler handler;
-  unsigned long duration;
-  const char* next;
-  LifecycleHook onEnter;
-  LifecycleHook onExit;
+// --- FSM States ---
+enum State {
+  SCAN,
+  REACT,
+  REPORT
 };
+State currentState = SCAN;
 
-// === FSM State Vars ===
-int currentStateIndex = 0;
-unsigned long stateStartTime = 0;
-
-// === State Forward Declarations ===
-void waitForObject();
-void moveServoReveal();
-void showLEDFeedback();
-void logResult();
-void servoEnterFromParams();
-void servoExitDetach();
-
-// === Sensor Data ===
-float lastReading = 0.0;
-
-// === Servo ActionParam ===
-ActionParams moveTo90 = { SERVO_PIN, 90, 1000 };
-
-// === FSM Config ===
-StateConfig states[] = {
-  { "WAIT_FOR_OBJECT", waitForObject, 1000, "MOVE_SERVO", nullptr, nullptr },
-  { "MOVE_SERVO", moveServoReveal, 1000, "SHOW_LED", servoEnterFromParams, servoExitDetach },
-  { "SHOW_LED", showLEDFeedback, 1000, "LOG", nullptr, nullptr },
-  { "LOG", logResult, 1000, "WAIT_FOR_OBJECT", nullptr, nullptr }
-};
-const int NUM_STATES = sizeof(states) / sizeof(StateConfig);
-
-// === State Handlers ===
-void waitForObject() {
-  lastReading = readAnalogSensor(SENSOR_PIN);
-  Serial.print("[SENSE] Light level: ");
-  Serial.println(lastReading);
-}
-
-void moveServoReveal() {
-  // Servo is moved in onEnter
-}
-
-void showLEDFeedback() {
-  Serial.println("[LED] Object detected. Status: OK");
-}
-
-void logResult() {
-  Serial.print("{ \"sensor\": \"A0\", \"value\": ");
-  Serial.print(lastReading);
-  Serial.println(" } // Mission log entry");
-}
-
-void servoEnterFromParams() {
-  myServo.attach(moveTo90.pin);
-  Serial.print("[SERVO] Rotating to ");
-  Serial.println(moveTo90.angle);
-  myServo.write(moveTo90.angle);
-  delay(moveTo90.duration); // optional for now
-}
-
-void servoExitDetach() {
-  Serial.println("[SERVO] Detaching");
-  myServo.detach();
-}
+// --- Timing ---
+unsigned long lastChange = 0;
+const unsigned long REACT_TIME = 1000;
+const unsigned long REPORT_TIME = 1500;
 
 void setup() {
   Serial.begin(115200);
   pinMode(SENSOR_PIN, INPUT);
-  Serial.print("Starting in state: ");
-  Serial.println(states[currentStateIndex].name);
-  stateStartTime = millis();
-  if (states[currentStateIndex].onEnter) states[currentStateIndex].onEnter();
+  pinMode(LED_PIN, OUTPUT);
+  pwm.begin();
+  pwm.setPWMFreq(SERVO_FREQ);
+  delay(10);
+
+  Serial.println("MissionDeck FSM Initialized");
 }
 
 void loop() {
   unsigned long now = millis();
-  StateConfig current = states[currentStateIndex];
-  current.handler();
 
-  if (current.duration > 0 && now - stateStartTime >= current.duration) {
-    if (current.onExit) current.onExit();
+  switch (currentState) {
+    case SCAN:
+      // MCP Step 1: SENSE – Read simulated sensor
+      int val = analogRead(SENSOR_PIN);
+      Serial.print("Scan Value: ");
+      Serial.println(val);
 
-    for (int i = 0; i < NUM_STATES; i++) {
-      if (strcmp(states[i].name, current.next) == 0) {
-        currentStateIndex = i;
-        break;
+      // MCP Step 2: PLAN – trigger if threshold crossed
+      if (val > 500) {
+        currentState = REACT;
+        lastChange = now;
+        Serial.println("Trigger Detected → REACT");  // MCP Step 4: LOG
       }
-    }
+      break;
 
-    stateStartTime = millis();
-    if (states[currentStateIndex].onEnter) states[currentStateIndex].onEnter();
+    case REACT:
+      // MCP Step 3: ACT – Move servo to simulate sorting
+      pwm.setPWM(SERVO_CHANNEL, 0, SERVO_MAX);
+      digitalWrite(LED_PIN, HIGH);
+
+      if (now - lastChange >= REACT_TIME) {
+        currentState = REPORT;
+        lastChange = now;
+        Serial.println("Action Complete → REPORT");  // MCP Step 4: LOG
+      }
+      break;
+
+    case REPORT:
+      // MCP Step 4: LOG – Feedback and reset
+      pwm.setPWM(SERVO_CHANNEL, 0, SERVO_MIN);
+      digitalWrite(LED_PIN, LOW);
+
+      if (now - lastChange >= REPORT_TIME) {
+        currentState = SCAN;
+        Serial.println("Cycle Complete → SCAN");  // MCP Step 5: REPEAT
+      }
+      break;
   }
 }
