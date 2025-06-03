@@ -22,8 +22,8 @@ Students will write FSM-based code to capture images from the ESP32-S3 camera, r
 
 📂 **File Structure**
 ```
-2-BlockClassifierFSM/
-├── BlockClassifierFSM.ino       # Main FSM code with classification logic
+2.3-BlockClassifierFSM/
+├── 2.3-BlockClassifierFSM.ino      # Main FSM code with classification logic
 ├── config_template.h            # Team-specific configuration struct for metadata and Wi-Fi
 ├── README.md                    # This guide
 └── exercises/
