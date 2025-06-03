@@ -12,13 +12,13 @@ This program acts like a mini-robot brain following a simple plan.
 It cycles through a series of steps to continuously monitor its surroundings,
 understand them, and then perform actions based on that understanding.
 
-Think of it as this 5-step process:
 
-Step 1: SENSE    - Like opening your eyes! The system gathers fresh information from the world.
-Step 2: THINK    - Using smarts (like AI models), the system processes the information to understand it.
-Step 3: DECIDE   - Based on what it now understands, the system figures out what its next important action should be.
-Step 4: EXECUTE  - The system performs the action it decided on. This might be doing something active, or just pausing to pace itself.
-Step 5: REPEAT   - Go back to SENSE and start the whole cycle again, always learning and acting.
+
+Step 1: SENSE "SEE"   - Like opening your eyes! The system gathers fresh information from the world.
+Step 2: PLAN  "THINK"  - Using smarts (like AI models), the system processes the information to understand it.
+Step 3: ACT   "DO" - Based on what it now understands, the system figures out what its next important action should be.
+Step 4: LOG   "SPEAK" - The system performs the action it decided on. This might be doing something active, or just pausing to pace itself.
+Step 5: REPEAT  "LOOP"  - Go back to SENSE and start the whole cycle again, always learning and acting.
 */
 
 #include <Arduino.h>
@@ -26,10 +26,23 @@ Step 5: REPEAT   - Go back to SENSE and start the whole cycle again, always lear
 #include <WiFi.h>
 #include "config.h"
 
-// === FSM Types ===
+// === STEP 0: Setup the FSM (Finite State Machine) ===
+// We use a finite state machine to manage the system's behavior in simple, repeatable steps.
+
+// These typedefs define custom names for functions used in each state.
+// - StateHandler: The main function that runs for each state (e.g., capture, classify).
+// - LifecycleHook: Optional functions that run when entering or exiting a state (like startup messages).
 typedef void (*StateHandler)();
 typedef void (*LifecycleHook)();
 
+// This struct defines the structure of each state in the FSM.
+// Each state includes:
+// - name:        A label for the state (e.g., "SEE", "THINK").
+// - handler:     The function to run while in this state.
+// - duration:    How long to stay in the state (in milliseconds).
+// - next:        The name of the next state to transition to.
+// - onEnter:     Optional function to run once when entering the state.
+// - onExit:      Optional function to run once when exiting the state.
 struct StateConfig {
   const char* name;
   StateHandler handler;
@@ -39,12 +52,15 @@ struct StateConfig {
   LifecycleHook onExit;
 };
 
-int currentStateIndex = 0;
-unsigned long stateStartTime = 0;
+// FSM Control Variables
+int currentStateIndex = 0;          // Keeps track of which state we’re in
+unsigned long stateStartTime = 0;   // Records when the current state started
 
-String label = "unknown";
-float confidence = 0.0;
-bool usedFallback = false;
+// Output Variables from THINK (classification) Step
+String label = "unknown";           // The predicted label (e.g., "red_tall")
+float confidence = 0.0;             // How confident the model is (from 0.0 to 1.0)
+bool usedFallback = false;          // True if a real ML model wasn’t used (fallback was random)
+
 
 // === Camera Config ===
 void setupCamera() {
