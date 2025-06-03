@@ -1,72 +1,85 @@
 /**********************************************************************
- * File       : pca_test.ino
- * Title      : PCA9685 Connection Test (Skinny Version)
+ * File       : c_servo_pca9685_test.ino
+ * Title      : PCA9685 Servo Sweep Test with I2C Detection
  * Author     : Rudy Martin / Next Shift Consulting
  * Project    : Artemis DSAI 2025 Camp
- * Description: Verifies I2C communication with PCA9685 via GPIO 4/5
+ * Description: Scans I2C, initializes PCA9685, and sends test pulses
+ *              to all 16 channels with verbose feedback.
  **********************************************************************/
 
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
+const uint8_t SERVO_SDA = 4;
+const uint8_t SERVO_SCL = 5;
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
 
-// Restate Pin Config for your board
-static const uint8_t SDA = 8;
-static const uint8_t SCL = 9;
-
-void waitForSerial() {
-  unsigned long start = millis();
-  while (!Serial && millis() - start < 10000) {
-    delay(100);
-  }
-
-  // Extra wait for host to sync
-  delay(1000);
-  Serial.println("📡 Serial connected. Waiting to stabilize...");
-  delay(1000);
-
-  Serial.println("✅ Serial is alive. Type anything to continue...");
-  while (!Serial.available()) {
-    delay(100);
-  }
-  Serial.read();  // consume input
-  Serial.println("📨 Received input. Continuing setup...");
-}
+void waitForSerial();
+void scanI2CDevices(TwoWire &bus);
+void testAllServoChannels();
 
 void setup() {
   Serial.begin(115200);
   waitForSerial();
 
-  Serial.println("🔌 Starting PCA9685 I2C Test");
+  Serial.println("🔌 Starting PCA9685 Servo Detection Sketch");
 
-  // Restate PIN Config for your board
-  Wire.begin(8, 9);           // SDA = GPIO 4, SCL = GPIO 5
-  Wire.setClock(400000);     // Optional: 400kHz for faster I2C
+  Wire.begin(SERVO_SDA, SERVO_SCL);
+  Wire.setClock(400000);
 
+  scanI2CDevices(Wire);
+
+  Serial.println("⚙️  Initializing PCA9685...");
   pwm.begin();
-  pwm.setPWMFreq(50);
+  pwm.setPWMFreq(50);  // 50 Hz for standard servos
   delay(100);
+  Serial.println("✅ PCA9685 ready. Beginning channel scan...");
 
-  Serial.println("✅ PCA9685 Initialized. Sending test pulse on channel 0...");
-  pwm.setPWM(0, 0, 300);      // Send low pulse
-  delay(500);
-  pwm.setPWM(0, 0, 500);      // Send mid pulse
-  delay(500);
-  pwm.setPWM(0, 0, 400);      // Center
-  Serial.println("🎯 Test pulse sent. Check servo response or monitor for I2C errors.");
+  testAllServoChannels();
 }
-
-int loopCount = 0;
 
 void loop() {
-  if (loopCount < 5) {
-    Serial.printf("\n");
-    Serial.printf("🔁 Loop iteration #%d\n", loopCount + 1);
-    loopCount++;
-    delay(1000);  // Optional: slow down for readability
-  }
+  // Freeze after test, or do it once per reset
 }
 
+/* ---------------------------------------------
+ * Wait for serial connection to stabilize
+ * --------------------------------------------- */
+void waitForSerial() {
+  unsigned long start = millis();
+  while (!Serial && millis() - start < 10000) {
+    delay(100);
+  }
+  delay(1000);
+  Serial.println("📡 Serial connected. Waiting to stabilize...");
+  delay(1000);
+}
 
+/* ---------------------------------------------
+ * Verbose I2C scanner with PCA9685 signature
+ * --------------------------------------------- */
+void scanI2CDevices(TwoWire &bus) {
+  Serial.println("🔍 Scanning I2C bus for devices...");
 
+  byte error, address;
+  int nDevices = 0;
+  bool pcaFound = false;
+
+  for (address = 1; address < 127; address++) {
+    bus.beginTransmission(address);
+    error = bus.endTransmission();
+
+    if (error == 0) {
+      Serial.print("✅ I2C device found at 0x");
+      if (address < 16) Serial.print("0");
+      Serial.print(address, HEX);
+
+      // Try to read MODE1 register (0x00)
+      bus.beginTransmission(address);
+      bus.write(0x00);  // MODE1
+      if (bus.endTransmission(false) == 0 && bus.requestFrom(address, (uint8_t)1)) {
+        byte mode1 = bus.read();
+        Serial.print(" | MODE1: 0x");
+        Serial.print(mode1, HEX);
+
+        if (mode1

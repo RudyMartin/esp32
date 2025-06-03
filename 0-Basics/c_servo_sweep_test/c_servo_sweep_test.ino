@@ -4,6 +4,7 @@
  * Author     : Rudy Martin / Next Shift Consulting
  * Project    : Artemis DSAI 2025 Camp
  * Description: Sweeps a servo 100 times with LED feedback, then stops.
+ * Status     : Works for one servo at a time
  **********************************************************************/
 
 #include <ESP32Servo.h>
