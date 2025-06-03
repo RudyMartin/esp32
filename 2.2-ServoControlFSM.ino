@@ -1,5 +1,5 @@
 /**********************************************************************
- * File       : 2-ServoControlFSM.ino
+ * File       : 2.2-ServoControlFSM.ino
  * Title      : MCP/FSM – Servo Sweep Controller
  * Author     : Rudy Martin / Next Shift Consulting
  * Description: FSM with servo movement logic
