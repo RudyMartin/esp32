@@ -1,5 +1,5 @@
 /**********************************************************************
-* Filename    : BlockClassifierFSM.ino
+* Filename    : 2.3-BlockClassifierFSM.ino
 * Description : FSM-based Image Capture and Classification
 * Author      : Rudy Martin / Next Shift Consulting
 * Project     : Artemis DSAI 2025 Camp
