@@ -6,7 +6,7 @@
  *              Emphasizes sensing and logging steps of MCP
  **********************************************************************/
 
-// --- Sensor Variables ---
+// --- Sensor Config ---
 const int SENSOR_PIN = A0;    // Analog input
 const unsigned long INTERVAL = 1000;  // Log every 1s
 
