@@ -1,5 +1,5 @@
 /**********************************************************************
- * matrix_setup_blink_test.ino
+ * matrix_setup_blink_wait.ino
  * Pin-by-pin verification for ESP32-S3 HUB75 Matrix connection
  * Tests each pin individually to verify wiring
  **********************************************************************/
@@ -109,17 +109,30 @@ void loop() {
                       ") - GPIO" + String(activeConfig[i].pin) + 
                       " - Ribbon: " + activeConfig[i].ribonColor);
         
-        // Blink the pin HIGH for 500ms, then LOW for 500ms
+        // Give you time to read the pin info
+        Serial.println("  -> Starting test in 3 seconds...");
+        delay(3000);
+        
+        // Blink the pin HIGH for 2 seconds, then LOW for 2 seconds
         digitalWrite(activeConfig[i].pin, HIGH);
-        Serial.println("  -> GPIO" + String(activeConfig[i].pin) + " = HIGH (3.3V)");
-        delay(500);
+        Serial.println("  -> GPIO" + String(activeConfig[i].pin) + " = HIGH (3.3V) - MEASURE NOW!");
+        delay(2000);
         
         digitalWrite(activeConfig[i].pin, LOW);
-        Serial.println("  -> GPIO" + String(activeConfig[i].pin) + " = LOW (0V)");
-        delay(500);
+        Serial.println("  -> GPIO" + String(activeConfig[i].pin) + " = LOW (0V) - MEASURE NOW!");
+        delay(2000);
         
         Serial.println("  -> Check: Did you see voltage change on " + 
                       activeConfig[i].ribonColor + " wire?");
+        Serial.println("  -> Press Enter in Serial Monitor when ready for next pin...");
+        
+        // Wait for user input before continuing
+        while(!Serial.available()) {
+          delay(100);
+        }
+        while(Serial.available()) {
+          Serial.read(); // Clear the buffer
+        }
         Serial.println("");
         
       } else {
