@@ -19,12 +19,63 @@ const int MAX_CYCLES = 10; // Number of times to repeat the full diagnostic sequ
 // Define your S3 to HUB75 pin mapping again for clarity
 // THESE MUST BE THE PINS YOU HAVE WIRED!
 // Freenove WROOM ESP32-S3 on 64x64 HUB75
-HUB75_I2S_CFG::i2s_pins current_pins = {
-    .r1 = 42, .g1 = 41, .b1 = 40,
-    .r2 = 38, .g2 = 39, .b2 = 37,
-    .a = 45, .b = 48, .c = 47, .d = 21, .e = 14, // E pin (GPIO14) is CRITICAL for 64x64
-    .lat = 2, .oe = 1, .clk = 36
-};
+
+// // Configuration 2: Recommended Safe Pins (ESP32-S3, Freenove focused)
+// PinConfig config2[] = {
+//   {42, "R1", "Red Upper", "Blue"},     // Pin 1 (Keep working RGB)
+//   {41, "G1", "Green Upper", "Green"},  // Pin 2 (Keep working RGB)
+//   {40, "B1", "Blue Upper", "Yellow"},  // Pin 3 (Keep working RGB)
+//   {39, "R2", "Red Lower", "Orange"},   // Pin 4 (Keep working RGB)
+//   {38, "G2", "Green Lower", "Red"},    // Pin 5 (Keep working RGB)
+//   {37, "B2", "Blue Lower", "Brown"},   // Pin 6 (Keep working RGB)
+//   {45, "A", "Address A", "Black"},     // Pin 7 (Keep, generally fine)
+//   {48, "B", "Address B", "White"},     // Pin 8 (Keep, generally fine)
+//   {47, "C", "Address C", "Silver"},    // Pin 9 (Keep, generally fine)
+//   {15, "D", "Address D", "Purple"},    // Pin 10 (Changed from 21: Safer GPIO)
+//   {16, "E", "Address E", "Blue"},      // Pin 11 (Changed from 14: Safer GPIO)
+//   {-1, "GND", "Ground", "Green"},      // Pin 12 (Ground)
+//   {17, "LAT", "Latch", "Yellow"},      // Pin 13 (Changed from 2: Avoids UART TX)
+//   {18, "OE", "Output Enable", "Orange"},// Pin 14 (Changed from 1: Avoids UART RX)
+//   {19, "CLK", "Clock", "Red"},         // Pin 15 (Changed from 36: Safer, contiguous)
+//   {-1, "5V", "Power 5V", "Brown"}      // Pin 16 (Power)
+// };
+
+  .r1 = 25,  // Red 1
+    .g1 = 26,  // Green 1  
+    .b1 = 27,  // Blue 1
+    .r2 = 39,  // Red 2
+    .g2 = 38,  // Green 2
+    .b2 = 37,  // Blue 2
+    .a = 45,   // Address A
+    .b = 48,   // Address B
+    .c = 47,   // Address C
+    .d = 15,   // Address D
+    .e = 16,   // Address E (for 64x64, -1 for 32x32)
+    .lat = 17,  // Latch
+    .oe = 18,  // Output Enable
+    .clk = 19  // Clock
+  };
+
+  // ESP32 S3 pins (see configuration above)
+  HUB75_I2S_CFG::i2s_pins current_pins = {
+    .r1 = 25,  // Red 1
+    .g1 = 26,  // Green 1  
+    .b1 = 27,  // Blue 1
+    .r2 = 39,  // Red 2
+    .g2 = 38,  // Green 2
+    .b2 = 37,  // Blue 2
+    .a = 45,   // Address A
+    .b = 48,   // Address B
+    .c = 47,   // Address C
+    .d = 15,   // Address D
+    .e = 16,   // Address E (for 64x64, -1 for 32x32)
+    .lat = 17,  // Latch
+    .oe = 18,  // Output Enable
+    .clk = 19  // Clock
+  };
+
+
+
 
 // --- Helper Print Functions for Clear Serial Output ---
 void printHeader(String title) {

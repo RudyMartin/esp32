@@ -241,10 +241,31 @@ void setup() {
   // Single, tested configuration for ESP32-S3
   HUB75_I2S_CFG::i2s_pins _pins = {
     .r1 = 42, .g1 = 41, .b1 = 40,      // Top half RGB
-    .r2 = 38, .g2 = 39, .b2 = 37,      // Bottom half RGB  
+    .r2 = 39, .g2 = 38, .b2 = 37,      // Bottom half RGB  
     .a = 45, .b = 48, .c = 47, .d = 21, .e = 14,  // Address lines
     .lat = 2, .oe = 1, .clk = 36        // Control lines
   };
+
+// // Configuration 3: Hybrid  Approach ESP32-S3, Freenove focused)
+// PinConfig config3[] = {
+//   {42, "R1", "Red Upper", "Blue"},     // Pin 1 (Keep working RGB)
+//   {41, "G1", "Green Upper", "Green"},  // Pin 2 (Keep working RGB)
+//   {40, "B1", "Blue Upper", "Yellow"},  // Pin 3 (Keep working RGB)
+//   {39, "R2", "Red Lower", "Orange"},   // Pin 4 (Keep working RGB)
+//   {38, "G2", "Green Lower", "Red"},    // Pin 5 (Keep working RGB)
+//   {37, "B2", "Blue Lower", "Brown"},   // Pin 6 (Keep working RGB)
+//   {45, "A", "Address A", "Black"},     // Pin 7 (Keep, generally fine)
+//   {48, "B", "Address B", "White"},     // Pin 8 (Keep, generally fine)
+//   {47, "C", "Address C", "Silver"},    // Pin 9 (Keep, generally fine)
+//   {21, "D", "Address D", "Purple"},    // Pin 10 (Changed from 21: Safer GPIO)
+//   {14, "E", "Address E", "Blue"},      // Pin 11 (Changed from 14: Safer GPIO)
+//   {-1, "GND", "Ground", "Green"},      // Pin 12 (Ground)
+//   {2, "LAT", "Latch", "Yellow"},      // Pin 13 (Changed from 2: Avoids UART TX)
+//   {1, "OE", "Output Enable", "Orange"},// Pin 14 (Changed from 1: Avoids UART RX)
+//   {36, "CLK", "Clock", "Red"},         // Pin 15 (Changed from 36: Safer, contiguous)
+//   {-1, "5V", "Power 5V", "Brown"}      // Pin 16 (Power)
+// };
+
 
   HUB75_I2S_CFG mxconfig(64, 64, 1, _pins);
   mxconfig.double_buff = true;

@@ -1,7 +1,8 @@
-/**********************************************************************
+*********************************************************************
  * matrix_setup_blink_wait.ino
  * Enhanced Pin-by-pin verification for ESP32-S3 HUB75 Matrix connection
  * Tests each pin individually with extended timing and enhanced blinking
+ * IBROKE THIS
  **********************************************************************/
 
 // Pin configurations for Freenove ESP32-S3 board
@@ -54,21 +55,6 @@ struct PinConfig {
 // };
 
 
-  .r1 = 25,  // Red 1
-    .g1 = 26,  // Green 1  
-    .b1 = 27,  // Blue 1
-    .r2 = 39,  // Red 2
-    .g2 = 38,  // Green 2
-    .b2 = 37,  // Blue 2
-    .a = 45,   // Address A
-    .b = 48,   // Address B
-    .c = 47,   // Address C
-    .d = 15,   // Address D
-    .e = 16,   // Address E (for 64x64, -1 for 32x32)
-    .lat = 17,  // Latch
-    .oe = 18,  // Output Enable
-    .clk = 19  // Clock
-  };
 
 // Configuration 1: Old ESP32-S3 pins
 PinConfig config1[] = {
