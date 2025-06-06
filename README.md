@@ -1,2 +1,1 @@
-# esp32
-Code for Expressif ESP32
+# Tips, Tricks, and Traps for ESP32 Agent Systems
