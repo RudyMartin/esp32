@@ -2,6 +2,8 @@
 
 **Build Smarter Devices with the MCP/FSM Method**
 
+Author: Rudy Martin
+
 Unlock the power of intelligent embedded systems with this hands-on guide to designing agent-based applications using the ESP32 and a unique MCP (Model–Context–Protocol) framework. Whether you're an educator, maker, or aspiring engineer, this book teaches you how to build AI-driven systems that think, act, and adapt — all using the familiar power of Finite State Machines (FSM).
 
 From blinking LEDs to real-time decision-making agents, you'll learn how to combine sensors, servos, classification models, and stateful logic into reusable building blocks for edge intelligence.
