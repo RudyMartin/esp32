@@ -1,11 +1,14 @@
 /**********************************************************************
- * Filename    : claude_matrix_branch2_c4_v1.ino
- * Description : SEE/THINK/ACT/SPEAK/REPEAT LED Matrix (64x64 HUB75)
- * Author      : Rudy Martin / Next Shift Consulting - FIXED VERSION
- * Project     : Artemis DSAI 2025 – LED Matrix Display Labs Using Agents
+ * Filename    : claude_matrix_b2_c4_v15.ino
+ * Description : Enhanced Pin-by-pin verification diagnostic for ESP32-S3 HUB75 Matrix connection
+ * Author      : Rudy Martin / Next Shift Consulting - AUTO DIAGNOSTIC
+ * Project     : Artemis DSAI 2025
  * Modified    : Jun 6, 2025   
- * 
+ * PURPOSE     : AUTOMATIC continuous diagnostics with detailed serial output
  **********************************************************************/
+
+// REQUIREMENT: The serial description must be readable by high school student so they can note errors 
+
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <FastLED.h>
 
@@ -57,6 +60,15 @@
 #define PANEL_RES_X 64
 #define PANEL_RES_Y 64
 #define PANEL_CHAIN 1
+
+// ===========================================
+// TIMING CONFIGURATION
+// ===========================================
+#define TIME_ON_SCREEN 60000    // Time each pattern displays (milliseconds)
+                                // 60000ms = 1 minute
+                                // 30000ms = 30 seconds  
+                                // 120000ms = 2 minutes
+#define STATE_TRANSITION_TIME 3000  // Time for initial display tests (3 seconds)
 
 // ===========================================
 // FINITE STATE MACHINE STATES
@@ -170,7 +182,7 @@ void handleTestingPinsState() {
     // Test basic display functionality
     testBasicDisplay();
     
-    if (millis() - stateTimer > 3000) { // 3 second test
+    if (millis() - stateTimer > STATE_TRANSITION_TIME) { // Use configurable time for testing
       Serial.println("Display test completed - ready for operation");
       currentState = STATE_DISPLAY_READY;
       stateTimer = millis();
@@ -182,18 +194,22 @@ void handleTestingPinsState() {
 }
 
 void handleDisplayReadyState() {
-  Serial.println("STATE: Display ready - starting patterns");
+  Serial.printf("STATE: Display ready - starting patterns (changing every %d seconds)\n", 
+                TIME_ON_SCREEN / 1000);
   currentState = STATE_RUNNING_PATTERN;
   testPattern = 0;
   stateTimer = millis();
 }
 
 void handleRunningPatternState() {
-  // Run different test patterns
-  if (millis() - stateTimer > 2000) { // Change pattern every 2 seconds
+  // Run different test patterns with configurable timing
+  if (millis() - stateTimer > TIME_ON_SCREEN) { // Use configurable TIME_ON_SCREEN
     runTestPattern(testPattern);
     testPattern = (testPattern + 1) % 5; // Cycle through 5 patterns
     stateTimer = millis();
+    
+    // Print simple timing info
+    Serial.printf("\n>>> NEXT TEST will start in %d seconds <<<\n\n", TIME_ON_SCREEN / 1000);
   }
 }
 
@@ -321,10 +337,14 @@ void setupMatrixDisplay() {
 void testBasicDisplay() {
   if (dma_display == nullptr) return;
   
-  // Simple color test
+  // Enhanced basic test - separate upper and lower halves
   dma_display->fillRect(0, 0, 64, 21, dma_display->color565(255, 0, 0));   // Red
   dma_display->fillRect(0, 21, 64, 21, dma_display->color565(0, 255, 0));  // Green  
   dma_display->fillRect(0, 42, 64, 22, dma_display->color565(0, 0, 255));  // Blue
+  
+  // Add diagnostic info
+  Serial.println("Basic test: Red(0-20), Green(21-41), Blue(42-63)");
+  Serial.println("Check if colors appear in correct regions");
 }
 
 void runTestPattern(int pattern) {
@@ -333,30 +353,133 @@ void runTestPattern(int pattern) {
   dma_display->clearScreen();
   
   switch (pattern) {
-    case 0: // Solid colors
-      dma_display->fillScreen(dma_display->color565(255, 0, 0));
-      Serial.println("Pattern: Red screen");
+    case 0: // RGB test with upper/lower half verification
+      testUpperLowerHalves();
+      Serial.println("\n*** TEST 1: UPPER AND LOWER HALF TEST ***");
+      Serial.println("WHAT YOU SHOULD SEE:");
+      Serial.println("  - TOP half of screen = RED color");
+      Serial.println("  - BOTTOM half of screen = GREEN color");
+      Serial.println("  - White line separating the two halves");
+      Serial.println("WHAT THIS TESTS: If lower half data pins are working");
       break;
       
-    case 1: // Rainbow gradient
-      drawRainbow();
-      Serial.println("Pattern: Rainbow");
+    case 1: // Individual color planes
+      testColorPlanes();
+      Serial.println("\n*** TEST 2: INDIVIDUAL COLOR TEST ***");
+      Serial.println("WHAT YOU SHOULD SEE:");
+      Serial.println("  - Only ONE color showing at a time");
+      Serial.println("  - Color changes every minute through:");
+      Serial.println("    RED top, RED bottom, GREEN top, GREEN bottom, BLUE top, BLUE bottom");
+      Serial.println("WHAT THIS TESTS: Each individual color wire connection");
       break;
       
-    case 2: // Checkerboard
+    case 2: // Row addressing test
+      testRowAddressing();
+      Serial.println("\n*** TEST 3: ROW ADDRESSING TEST ***");
+      Serial.println("WHAT YOU SHOULD SEE:");
+      Serial.println("  - Horizontal colored lines across the screen");
+      Serial.println("  - Colors change from top to bottom");
+      Serial.println("  - Numbers showing row positions (0, 16, 32, 48)");
+      Serial.println("WHAT THIS TESTS: If all 64 rows can be controlled properly");
+      break;
+      
+    case 3: // Checkerboard
       drawCheckerboard();
-      Serial.println("Pattern: Checkerboard");
-      break;
-      
-    case 3: // Moving pixel
-      drawMovingPixel();
-      Serial.println("Pattern: Moving pixel");
+      Serial.println("\n*** TEST 4: CHECKERBOARD PATTERN ***");
+      Serial.println("WHAT YOU SHOULD SEE:");
+      Serial.println("  - Black and white squares like a chess board");
+      Serial.println("  - Pattern should cover the entire 64x64 screen");
+      Serial.println("WHAT THIS TESTS: Overall display quality and timing");
       break;
       
     case 4: // Text display
       drawText();
-      Serial.println("Pattern: Text");
+      Serial.println("\n*** TEST 5: TEXT DISPLAY ***");
+      Serial.println("WHAT YOU SHOULD SEE:");
+      Serial.println("  - Text saying 'ESP32-S3' and '64x64'");
+      Serial.println("  - Text should be centered and readable");
+      Serial.println("WHAT THIS TESTS: Fine detail display capability");
       break;
+  }
+  
+  Serial.println("\nIF YOU SEE PROBLEMS:");
+  Serial.println("1. Take a photo of your screen");
+  Serial.println("2. Describe what you see vs. what should appear");
+  Serial.println("3. Note which test number is having issues");
+  Serial.println("=========================================");
+}
+
+// ===========================================
+// ENHANCED DIAGNOSTIC TEST PATTERNS
+// ===========================================
+void testUpperLowerHalves() {
+  // Test upper half (rows 0-31) - should use R1,G1,B1
+  dma_display->fillRect(0, 0, 64, 32, dma_display->color565(255, 0, 0));   // Red upper
+  
+  // Test lower half (rows 32-63) - should use R2,G2,B2  
+  dma_display->fillRect(0, 32, 64, 32, dma_display->color565(0, 255, 0));  // Green lower
+  
+  // Add a white line at the split to clearly show the division
+  dma_display->drawLine(0, 31, 63, 31, dma_display->color565(255, 255, 255));
+  dma_display->drawLine(0, 32, 63, 32, dma_display->color565(255, 255, 255));
+}
+
+void testColorPlanes() {
+  static int colorTest = 0;
+  
+  switch (colorTest % 6) {
+    case 0: // Red only - upper half
+      dma_display->fillRect(0, 0, 64, 32, dma_display->color565(255, 0, 0));
+      Serial.println("  >> NOW TESTING: RED color on TOP half only");
+      Serial.println("     (This tests the R1 wire connection)");
+      break;
+    case 1: // Red only - lower half  
+      dma_display->fillRect(0, 32, 64, 32, dma_display->color565(255, 0, 0));
+      Serial.println("  >> NOW TESTING: RED color on BOTTOM half only");
+      Serial.println("     (This tests the R2 wire connection)");
+      break;
+    case 2: // Green only - upper half
+      dma_display->fillRect(0, 0, 64, 32, dma_display->color565(0, 255, 0));
+      Serial.println("  >> NOW TESTING: GREEN color on TOP half only");
+      Serial.println("     (This tests the G1 wire connection)");
+      break;
+    case 3: // Green only - lower half
+      dma_display->fillRect(0, 32, 64, 32, dma_display->color565(0, 255, 0));
+      Serial.println("  >> NOW TESTING: GREEN color on BOTTOM half only");
+      Serial.println("     (This tests the G2 wire connection)");
+      break;
+    case 4: // Blue only - upper half
+      dma_display->fillRect(0, 0, 64, 32, dma_display->color565(0, 0, 255));
+      Serial.println("  >> NOW TESTING: BLUE color on TOP half only");
+      Serial.println("     (This tests the B1 wire connection)");
+      break;
+    case 5: // Blue only - lower half
+      dma_display->fillRect(0, 32, 64, 32, dma_display->color565(0, 0, 255));
+      Serial.println("  >> NOW TESTING: BLUE color on BOTTOM half only");
+      Serial.println("     (This tests the B2 wire connection)");
+      break;
+  }
+  colorTest++;
+}
+
+void testRowAddressing() {
+  // Draw individual rows to test addressing
+  for (int row = 0; row < 64; row += 8) {
+    uint16_t color = dma_display->color565(
+      (row * 4) % 256,          // Red gradient
+      ((64 - row) * 4) % 256,   // Green gradient  
+      128                        // Constant blue
+    );
+    dma_display->drawLine(0, row, 63, row, color);
+    dma_display->drawLine(0, row + 1, 63, row + 1, color);
+  }
+  
+  // Add row numbers every 16 rows
+  dma_display->setTextColor(dma_display->color565(255, 255, 255));
+  dma_display->setTextSize(1);
+  for (int row = 0; row < 64; row += 16) {
+    dma_display->setCursor(2, row + 2);
+    dma_display->printf("%d", row);
   }
 }
 
@@ -400,16 +523,28 @@ void drawText() {
 // DIAGNOSTIC FUNCTIONS
 // ===========================================
 void printDiagnostics() {
-  Serial.println("\n=== DIAGNOSTIC INFORMATION ===");
+  Serial.println("\n=== SYSTEM STATUS ===");
   Serial.printf("ESP32 Chip: %s\n", ESP.getChipModel());
-  Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
-  Serial.printf("Current State: %d\n", currentState);
-  Serial.printf("Display Initialized: %s\n", (dma_display != nullptr) ? "YES" : "NO");
+  Serial.printf("Available Memory: %d bytes\n", ESP.getFreeHeap());
+  Serial.printf("Display Working: %s\n", (dma_display != nullptr) ? "YES" : "NO");
   
   if (dma_display != nullptr) {
-    Serial.println("Matrix Display: ACTIVE");
+    Serial.println("\n*** DISPLAY IS RUNNING ***");
+    Serial.println("Watch the screen and compare to the descriptions above.");
+    Serial.println("Each test runs for 1 minute before changing.");
   } else {
-    Serial.println("Matrix Display: FAILED - Check wiring and pins!");
+    Serial.println("\n*** DISPLAY FAILED TO START ***");
+    Serial.println("COMMON PROBLEMS:");
+    Serial.println("1. Wrong wire connections");
+    Serial.println("2. Not enough power (need 5V, 3+ amps)");
+    Serial.println("3. Bad ribbon cable");
+    Serial.println("4. Wrong pin numbers in code");
   }
-  Serial.println("===============================\n");
+  
+  Serial.println("\n=== FOR HELP ===");
+  Serial.println("Tell us:");
+  Serial.println("1. Which TEST NUMBER has problems");
+  Serial.println("2. What you SEE vs what SHOULD appear");
+  Serial.println("3. Take a photo if possible");
+  Serial.println("=====================\n");
 }
