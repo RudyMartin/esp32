@@ -29,6 +29,10 @@ From blinking LEDs to real-time decision-making agents, you'll learn how to comb
 
 **Includes starter code, schematics, and annotated walkthroughs** for 5 labs and 3 capstone-ready AI agents.
 
+---
+
+For inquiries about the upcoming book reach out to [Rudy Martin](https://nextshiftconsulting.com/)
+
 > Build your own intelligent agents. Make the ESP32 *think*.
 > Start with MCP — finish with mission-ready AI.
 
