@@ -33,16 +33,14 @@ From blinking LEDs to real-time decision-making agents, you'll learn how to comb
 
 ---
 
-For inquiries about the upcoming book reach out to [Rudy Martin](https://nextshiftconsulting.com/)
-
-Here’s a clean, structured **`README.md`** file in Markdown format for your GitHub repo:
-
-
 # 🤖 Tips, Tricks, and Traps for ESP32 AI Agent Systems
 
 **Build Smarter Devices with the MCP Loop and FSM Design**
 
 This repository supports the book _Tips, Tricks, and Traps for ESP32 AI Agent Systems_. It provides hands-on code examples, lab walkthroughs, and system schematics for designing intelligent embedded systems using the ESP32.
+
+For inquiries about the upcoming book reach out to [Rudy Martin](https://nextshiftconsulting.com/)
+
 
 ---
 ## 📚 Reference
