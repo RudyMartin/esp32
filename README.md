@@ -1,37 +1,4 @@
-## 📘 **Tips, Tricks, and Traps for ESP32 AI Agent Systems**
 
-**Build Smarter Devices with the MCP/FSM Method**
-
-Author: [Rudy Martin](https://linkedin.com/in/rudymartin)
-
-Unlock the power of intelligent embedded systems with this hands-on guide to designing agent-based applications using the ESP32 and a unique MCP (Model–Context–Protocol) framework. Whether you're an educator, maker, or aspiring engineer, this book teaches you how to build AI-driven systems that think, act, and adapt — all using the familiar power of Finite State Machines (FSM).
-
-From blinking LEDs to real-time decision-making agents, you'll learn how to combine sensors, servos, classification models, and stateful logic into reusable building blocks for edge intelligence.
-
----
-
-### 🔧 What You'll Learn:
-
-* ✅ How to implement the **MCP loop** for agent behavior: Sense → Plan → Act → Log → Repeat
-* ✅ Design patterns for **FSM-driven decision making** in ESP32-based systems
-* ✅ Integration of AI inference, environment sensors, and action routines
-* ✅ Tips for debugging, modular design, and performance tuning
-* ⚠️ Common **traps** that cause agent logic to fail — and how to avoid them
-
----
-
-### 🎓 Who It's For:
-
-* Educators building project-based AI/robotics curricula
-* Makers and hobbyists interested in smarter microcontroller projects
-* Engineering students learning real-world embedded systems design
-* Anyone who wants to go beyond "if-else" coding and into agentic thinking
-
----
-
-**Includes starter code, schematics, and annotated walkthroughs** for 5 labs and 3 capstone-ready AI agents.
-
----
 
 # 🤖 Tips, Tricks, and Traps for ESP32 AI Agent Systems
 
@@ -70,7 +37,62 @@ From basic blinking LEDs to advanced sensor-aware AI agents, each project is mod
 
 ---
 
-For inquiries about the upcoming book or consulting services reach out to [Rudy Martin](https://nextshiftconsulting.com/)
+
+
+# 🤖 Tips, Tricks, and Traps for ESP32 AI Agent Systems  
+**Build Smarter Devices with the MCP/FSM Method**  
+
+Author: [Rudy Martin](https://linkedin.com/in/rudymartin)
+
+---
+
+Unlock the power of intelligent embedded systems with this hands-on guide to designing AI-powered agents using the ESP32 and a unique **MCP (Model–Context–Protocol)** framework. Whether you're an educator, maker, or engineer, this guide helps you build systems that think, act, and adapt — all through the power of **Finite State Machines (FSM)**.
+
+From blinking LEDs to real-time decision-making agents, you’ll learn to combine sensors, servos, classification models, and logical control into modular, mission-ready designs.
+
+---
+
+## 🔧 What You’ll Learn
+
+- ✅ Implement the **MCP loop**: Sense → Plan → Act → Log → Repeat  
+- ✅ Apply **FSM design patterns** for embedded decision logic  
+- ✅ Integrate AI models, sensors, and actuators into intelligent agents  
+- ✅ Debug smarter, build modular, and avoid common pitfalls  
+
+---
+
+## 🎓 Who It’s For
+
+- Educators designing project-based AI/robotics lessons  
+- Makers building smarter microcontroller projects  
+- Students learning embedded AI and edge computing  
+- Anyone ready to move beyond `if/else` logic into **agentic design**
+
+---
+
+## 📁 Repo Overview
+
+This repository supports the book and includes:
+
+- 📦 Starter code and templates  
+- 🧪 5 lab projects + 3 capstone-ready AI agents  
+- 🔌 Schematics and pinouts for ESP32 setups  
+- 🧠 Walkthroughs for FSM logic and MCP planning
+
+---
+
+## 📚 Reference
+
+> _Tips, Tricks, and Traps for ESP32 AI Agent Systems_  
+> **Build Smarter Devices with the MCP Loop and FSM Design**  
+> 📖 ISBN: *TBD*  
+> 🛒 Available soon on Amazon and other retailers
+
+---
+
+## 🧠 Questions or Consulting?
+
+For book updates, educational use, or consulting inquiries, contact **Rudy Martin** via [LinkedIn](https://linkedin.com/in/RudyMartin) or email [rudy@nextshift.ai](mailto:rudy@nextshift.ai)
 
 
 
