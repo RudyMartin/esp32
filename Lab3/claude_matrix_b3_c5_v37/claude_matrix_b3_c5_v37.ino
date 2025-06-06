@@ -1,10 +1,11 @@
 /**********************************************************************
- * Filename    : claude_matrix_b2_c4_v15.ino
+ * Filename    : claude_matrix_b3_c4_v19.ino
  * Description : Enhanced Pin-by-pin verification diagnostic for ESP32-S3 HUB75 Matrix connection
  * Author      : Rudy Martin / Next Shift Consulting - AUTO DIAGNOSTIC
  * Project     : Artemis DSAI 2025
  * Modified    : Jun 6, 2025   
  * PURPOSE     : AUTOMATIC continuous diagnostics with detailed serial output
+ * BRANCH.     : Use alternative display drivers WITH time control
  **********************************************************************/
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <FastLED.h>
@@ -15,27 +16,30 @@
 // CUSTOM PIN MAPPING - ESP32-S3 OPTIMIZED
 // These pins avoid UART, strapping, and sensitive pins
 
-// Data Pins (RGB for upper and lower half)
-#define P_R1  42 // Red 1  - Pin 1 on matrix cable
-#define P_G1  41 // Green 1 - Pin 2 on matrix cable
-#define P_B1  40 // Blue 1 - Pin 3 on matrix cable
-#define P_R2  38 // Red 2  - Pin 4 on matrix cable
-#define P_G2  39 // Green 2 - Pin 5 on matrix cable
-#define P_B2  37 // Blue 2 - Pin 6 on matrix cable
+// ===========================================
+// GPIO PIN CONFIGURATION FOR ESP32-S3
+// ===========================================
+// CURRENT WIRING CONFIGURATION - UPDATED FROM OLD CONFIG
 
-// Control and Address Pins (these are passed into the PxMATRIX constructor)
-// Changed from common ESP32 pins (22, 16, 5, 15) to S3-safe ones.
-#define P_LAT 17 // Latch           - Pin 13 on matrix cable (Changed from 22, avoids UART TX on S3)
-#define P_OE  18 // Output Enable   - Pin 14 on matrix cable (Changed from 16, avoids UART RX on S3)
-#define P_A   45 // Address A       - Pin 7 on matrix cable
-#define P_B   48 // Address B       - Pin 8 on matrix cable
-#define P_C   47 // Address C       - Pin 9 on matrix cable
-#define P_D   15 // Address D       - Pin 10 on matrix cable (Changed from 5, sensitive ESP32 pin on S3)
-#define P_E   16 // Address E       - Pin 11 on matrix cable (Changed from 15, sensitive ESP32 pin on S3)
+// RGB Data Pins (often hardcoded within the PxMatrix library or defined here)
+#define P_R1  42 // Pin 1 on matrix cable
+#define P_G1  41 // Pin 2 on matrix cable
+#define P_B1  40 // Pin 3 on matrix cable
+#define P_R2  38 // Pin 4 on matrix cable
+#define P_G2  39 // Pin 5 on matrix cable
+#define P_B2  37 // Pin 6 on matrix cable
 
-// Clock Pin (also typically picked up by the library for internal setup)
-// Changed from 36 (a strapping pin) for better practice, though it might work.
-#define P_CLK 19 // Clock           - Pin 15 on matrix cable (Using good general-purpose GPIO)
+// Address Pins
+#define P_A   45 // Pin 7 on matrix cable
+#define P_B   48 // Pin 8 on matrix cable
+#define P_C   47 // Pin 9 on matrix cable
+#define P_D   15 // Pin 10 on matrix cable (Changed from 21: avoiding sensitive flash pin)
+#define P_E   16 // Pin 11 on matrix cable (Changed from 14: avoiding sensitive JTAG pin)
+
+// Control Pins
+#define P_LAT 17 // Pin 13 on matrix cable (Changed from 2: avoiding UART TX)
+#define P_OE  18 // Pin 14 on matrix cable (Changed from 1: avoiding UART RX)
+#define P_CLK 19 // Pin 15 on matrix cable (Changed from 36: using a general purpose GPIO)
 
 // Compatibility aliases for the rest of the code
 #define R1_PIN P_R1
@@ -61,11 +65,19 @@
 // ===========================================
 // TIMING CONFIGURATION
 // ===========================================
-#define TIME_ON_SCREEN 60000    // Time each pattern displays (milliseconds)
-                                // 60000ms = 1 minute
-                                // 30000ms = 30 seconds  
-                                // 120000ms = 2 minutes
+#define TIME_ON_SCREEN 60000        // Time each pattern displays (milliseconds)
+                                    // 60000ms = 1 minute
+                                    // 30000ms = 30 seconds  
+                                    // 120000ms = 2 minutes
 #define STATE_TRANSITION_TIME 3000  // Time for initial display tests (3 seconds)
+#define DRIVER_DELAY_THRESHOLD 10000 // Time each driver test runs (milliseconds)
+                                    // 10000ms = 10 seconds per driver
+                                    // 5000ms = 5 seconds per driver
+                                    // 15000ms = 15 seconds per driver
+#define GLOBAL_LOOP_DELAY 50        // Main loop delay in milliseconds
+                                    // 50ms = 20 updates per second
+                                    // 100ms = 10 updates per second
+                                    // 25ms = 40 updates per second
 
 // ===========================================
 // FINITE STATE MACHINE STATES
@@ -73,6 +85,7 @@
 enum DisplayState {
   STATE_INIT,
   STATE_TESTING_PINS,
+  STATE_DISPLAY_DRIVER,
   STATE_DISPLAY_READY,
   STATE_RUNNING_PATTERN,
   STATE_ERROR
@@ -85,6 +98,24 @@ MatrixPanel_I2S_DMA *dma_display = nullptr;
 DisplayState currentState = STATE_INIT;
 unsigned long stateTimer = 0;
 int testPattern = 0;
+int driverTestIndex = 0;  // For cycling through different drivers
+
+// Available display drivers to test
+struct DriverInfo {
+  HUB75_I2S_CFG::shift_driver driver;
+  const char* name;
+  const char* description;
+};
+
+DriverInfo drivers[] = {
+  {HUB75_I2S_CFG::SHIFTREG, "SHIFTREG", "Standard shift register (most common)"},
+  {HUB75_I2S_CFG::FM6126A, "FM6126A", "FM6126A chip driver"},
+  {HUB75_I2S_CFG::FM6124, "FM6124", "FM6124 chip driver"},
+  {HUB75_I2S_CFG::ICN2038S, "ICN2038S", "ICN2038S chip driver"},
+  {HUB75_I2S_CFG::MBI5124, "MBI5124", "MBI5124 chip driver"}
+};
+
+const int numDrivers = sizeof(drivers) / sizeof(drivers[0]);
 
 // Pin verification array
 struct PinInfo {
@@ -124,7 +155,7 @@ void setup() {
 // ===========================================
 void loop() {
   runStateMachine();
-  delay(50); // Small delay to prevent overwhelming the system
+  delay(GLOBAL_LOOP_DELAY); // Configurable main loop delay
 }
 
 // ===========================================
@@ -138,6 +169,10 @@ void runStateMachine() {
       
     case STATE_TESTING_PINS:
       handleTestingPinsState();
+      break;
+      
+    case STATE_DISPLAY_DRIVER:
+      handleDisplayDriverState();
       break;
       
     case STATE_DISPLAY_READY:
@@ -157,45 +192,75 @@ void runStateMachine() {
 // ===========================================
 // STATE HANDLERS
 // ===========================================
-void handleInitState() {
-  Serial.println("STATE: Initializing...");
-  
-  // Test if pins are available
-  if (testPinAvailability()) {
-    Serial.println("Pin test passed - transitioning to display setup");
-    setupMatrixDisplay();
-    currentState = STATE_TESTING_PINS;
-  } else {
-    Serial.println("Pin test failed - entering error state");
-    currentState = STATE_ERROR;
-  }
+void handleDisplayReadyState() {
+  Serial.printf("STATE: Display ready - starting patterns (changing every %d seconds)\n", 
+                TIME_ON_SCREEN / 1000);
+  Serial.printf("Using driver: %s\n", drivers[driverTestIndex-1].name);
+  currentState = STATE_RUNNING_PATTERN;
+  testPattern = 0;
   stateTimer = millis();
 }
 
 void handleTestingPinsState() {
-  Serial.println("STATE: Testing matrix display...");
+  Serial.println("STATE: Basic pin testing completed");
   
   if (dma_display != nullptr) {
-    // Test basic display functionality
+    // Clean up previous display instance
+    delete dma_display;
+    dma_display = nullptr;
+  }
+  
+  Serial.println("Moving to driver testing phase...");
+  currentState = STATE_DISPLAY_DRIVER;
+  driverTestIndex = 0;  // Start with first driver
+  stateTimer = millis();
+}
+
+void handleDisplayDriverState() {
+  Serial.printf("\n*** TESTING DRIVER %d of %d ***\n", driverTestIndex + 1, numDrivers);
+  Serial.printf("Driver: %s\n", drivers[driverTestIndex].name);
+  Serial.printf("Description: %s\n", drivers[driverTestIndex].description);
+  
+  // Try current driver
+  if (setupMatrixDisplayWithDriver(drivers[driverTestIndex].driver)) {
+    Serial.println("*** DRIVER TEST SUCCESS! ***");
+    
+    // Test the display with this driver
     testBasicDisplay();
     
-    if (millis() - stateTimer > STATE_TRANSITION_TIME) { // Use configurable time for testing
-      Serial.println("Display test completed - ready for operation");
-      currentState = STATE_DISPLAY_READY;
+    // Wait a bit to see the result
+    if (millis() - stateTimer > DRIVER_DELAY_THRESHOLD) { // Use configurable driver delay
+      Serial.printf("Driver test completed after %d seconds. Check if display shows proper colors.\n", 
+                    DRIVER_DELAY_THRESHOLD / 1000);
+      Serial.println("Moving to next driver...");
+      
+      // Move to next driver automatically
+      driverTestIndex++;
+      
+      if (driverTestIndex >= numDrivers) {
+        Serial.println("All drivers tested. Using the last working one.");
+        currentState = STATE_DISPLAY_READY;
+      } else {
+        Serial.printf("Trying next driver in %d seconds...\n", DRIVER_DELAY_THRESHOLD / 1000);
+        // Clean up current display
+        if (dma_display != nullptr) {
+          delete dma_display;
+          dma_display = nullptr;
+        }
+      }
       stateTimer = millis();
     }
   } else {
-    Serial.println("Display initialization failed");
-    currentState = STATE_ERROR;
+    Serial.printf("*** DRIVER %s FAILED ***\n", drivers[driverTestIndex].name);
+    
+    // Try next driver
+    driverTestIndex++;
+    if (driverTestIndex >= numDrivers) {
+      Serial.println("All drivers failed! Check wiring and power.");
+      currentState = STATE_ERROR;
+    }
+    stateTimer = millis();
   }
-}
-
-void handleDisplayReadyState() {
-  Serial.printf("STATE: Display ready - starting patterns (changing every %d seconds)\n", 
-                TIME_ON_SCREEN / 1000);
-  currentState = STATE_RUNNING_PATTERN;
-  testPattern = 0;
-  stateTimer = millis();
 }
 
 void handleRunningPatternState() {
@@ -274,79 +339,50 @@ bool isValidGPIO(int pin) {
 }
 
 void printPinConfiguration() {
-  Serial.println("\n=== CUSTOM ESP32-S3 PIN CONFIGURATION ===");
-  Serial.println("Data Pins:");
-  Serial.printf("R1: GPIO%d  | G1: GPIO%d  | B1: GPIO%d\n", P_R1, P_G1, P_B1);
-  Serial.printf("R2: GPIO%d  | G2: GPIO%d  | B2: GPIO%d\n", P_R2, P_G2, P_B2);
+  Serial.println("\n=== CURRENT WIRING CONFIGURATION ===");
+  Serial.println("RGB Data Pins:");
+  Serial.printf("R1: GPIO%d (Pin 1) | G1: GPIO%d (Pin 2) | B1: GPIO%d (Pin 3)\n", P_R1, P_G1, P_B1);
+  Serial.printf("R2: GPIO%d (Pin 4) | G2: GPIO%d (Pin 5) | B2: GPIO%d (Pin 6)\n", P_R2, P_G2, P_B2);
   Serial.println("Address Pins:");
-  Serial.printf("A:  GPIO%d  | B:  GPIO%d  | C:  GPIO%d\n", P_A, P_B, P_C);
-  Serial.printf("D:  GPIO%d  | E:  GPIO%d\n", P_D, P_E);
+  Serial.printf("A:  GPIO%d (Pin 7)  | B:  GPIO%d (Pin 8)  | C:  GPIO%d (Pin 9)\n", P_A, P_B, P_C);
+  Serial.printf("D:  GPIO%d (Pin 10) | E:  GPIO%d (Pin 11) <- CRITICAL FOR 64x64!\n", P_D, P_E);
   Serial.println("Control Pins:");
-  Serial.printf("LAT: GPIO%d | OE: GPIO%d | CLK: GPIO%d\n", P_LAT, P_OE, P_CLK);
-  Serial.println("\nPin Selection Notes:");
-  Serial.println("- Avoids UART pins (43, 44) used for USB Serial");
-  Serial.println("- Avoids strapping pin 36 for CLK");
-  Serial.println("- Uses high GPIO range (37-48) for data pins");
-  Serial.println("- Uses safe low GPIO range (15-19) for control");
-  Serial.println("==========================================\n");
+  Serial.printf("LAT: GPIO%d (Pin 13) | OE: GPIO%d (Pin 14) | CLK: GPIO%d (Pin 15)\n", P_LAT, P_OE, P_CLK);
+  Serial.println("\nCONFIGURATION NOTES:");
+  Serial.println("- All pins updated for ESP32-S3 compatibility");
+  Serial.println("- E pin (GPIO 16) is essential for accessing all 64 rows");
+  Serial.println("- Control pins moved to safe GPIOs (17, 18, 19)");
+  Serial.println("=========================================\n");
 }
 
 // ===========================================
 // MATRIX DISPLAY SETUP
 // ===========================================
-void setupMatrixDisplay() {
-  Serial.println("Setting up 64x64 matrix display...");
+void handleInitState() {
+  Serial.println("STATE: Initializing...");
   
-  HUB75_I2S_CFG::i2s_pins _pins = {
-    P_R1, P_G1, P_B1, P_R2, P_G2, P_B2,  // Data pins
-    P_A, P_B, P_C, P_D, P_E,              // Address pins
-    P_LAT, P_OE, P_CLK                    // Control pins
-  };
-  
-  HUB75_I2S_CFG mxconfig(
-    PANEL_RES_X,   // width = 64
-    PANEL_RES_Y,   // height = 64  
-    PANEL_CHAIN,   // chain length = 1
-    _pins          // pin mapping
-  );
-  
-  // CRITICAL: 64x64 panel configuration
-  mxconfig.gpio.e = P_E;           // E pin MUST be set for 64 rows
-  mxconfig.clkphase = false;       // Clock phase
-  mxconfig.driver = HUB75_I2S_CFG::FM6126A;  // Try this driver first
-  mxconfig.double_buff = true;     // Enable double buffering
-  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_10M; // Try slower speed first
-  
-  Serial.println("*** 64x64 DISPLAY SETTINGS ***");
-  Serial.printf("Width: %d, Height: %d\n", PANEL_RES_X, PANEL_RES_Y);
-  Serial.printf("E Pin (critical for 64 rows): GPIO %d\n", P_E);
-  Serial.printf("Driver: FM6126A\n");
-  Serial.printf("Clock Speed: 10MHz\n");
-  
-  dma_display = new MatrixPanel_I2S_DMA(mxconfig);
-  
-  if (dma_display->begin()) {
-    Serial.println("*** SUCCESS: 64x64 matrix display started! ***");
-    dma_display->setBrightness8(90);
-    dma_display->clearScreen();
+  // Test if pins are available
+  if (testPinAvailability()) {
+    Serial.println("Pin test passed - transitioning to driver testing");
     
-    // Test if we can address all rows
-    Serial.println("Testing row addressing...");
-    for (int row = 0; row < 64; row += 16) {
-      dma_display->drawPixel(0, row, dma_display->color565(255, 255, 255));
+    // DIAGNOSTIC: Test E pin specifically
+    Serial.printf("\n*** TESTING E PIN (GPIO %d) ***\n", P_E);
+    pinMode(P_E, OUTPUT);
+    for (int i = 0; i < 5; i++) {
+      digitalWrite(P_E, HIGH);
+      delay(100);
+      digitalWrite(P_E, LOW);
+      delay(100);
+      Serial.printf("E pin toggle %d complete\n", i+1);
     }
-    delay(1000);
-    dma_display->clearScreen();
+    Serial.println("E pin toggle test finished\n");
     
+    currentState = STATE_TESTING_PINS;
   } else {
-    Serial.println("*** FAILED: Matrix display could not start! ***");
-    Serial.println("TROUBLESHOOTING:");
-    Serial.println("1. Check E pin connection (GPIO 16)");
-    Serial.println("2. Verify power supply (5V, 3+ amps)");
-    Serial.println("3. Check all ribbon cable connections");
-    delete dma_display;
-    dma_display = nullptr;
+    Serial.println("Pin test failed - entering error state");
+    currentState = STATE_ERROR;
   }
+  stateTimer = millis();
 }
 
 // ===========================================
@@ -534,11 +570,48 @@ void drawCheckerboard() {
   }
 }
 
-void drawMovingPixel() {
-  static int pixelX = 0, pixelY = 0;
-  dma_display->drawPixel(pixelX, pixelY, dma_display->color565(255, 255, 0));
-  pixelX = (pixelX + 1) % 64;
-  if (pixelX == 0) pixelY = (pixelY + 1) % 64;
+bool setupMatrixDisplayWithDriver(HUB75_I2S_CFG::shift_driver testDriver) {
+  Serial.printf("Setting up display with %s driver...\n", 
+                drivers[driverTestIndex].name);
+  
+  HUB75_I2S_CFG::i2s_pins _pins = {
+    P_R1, P_G1, P_B1, P_R2, P_G2, P_B2,  // Data pins
+    P_A, P_B, P_C, P_D, P_E,              // Address pins
+    P_LAT, P_OE, P_CLK                    // Control pins
+  };
+  
+  HUB75_I2S_CFG mxconfig(
+    PANEL_RES_X,   // width = 64
+    PANEL_RES_Y,   // height = 64  
+    PANEL_CHAIN,   // chain length = 1
+    _pins          // pin mapping
+  );
+  
+  // Configure for current driver test
+  mxconfig.gpio.e = P_E;           // E pin MUST be set for 64 rows
+  mxconfig.clkphase = false;       // Clock phase
+  mxconfig.driver = testDriver;    // Use the driver being tested
+  mxconfig.double_buff = true;     // Enable double buffering
+  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_8M; // 8MHz for stability
+  
+  Serial.printf("Driver: %s | Clock: 8MHz | E Pin: GPIO %d\n", 
+                drivers[driverTestIndex].name, P_E);
+  
+  dma_display = new MatrixPanel_I2S_DMA(mxconfig);
+  
+  if (dma_display->begin()) {
+    Serial.printf("*** %s DRIVER INITIALIZED SUCCESSFULLY! ***\n", 
+                  drivers[driverTestIndex].name);
+    dma_display->setBrightness8(90);
+    dma_display->clearScreen();
+    return true;
+  } else {
+    Serial.printf("*** %s DRIVER FAILED TO INITIALIZE ***\n", 
+                  drivers[driverTestIndex].name);
+    delete dma_display;
+    dma_display = nullptr;
+    return false;
+  }
 }
 
 void drawText() {

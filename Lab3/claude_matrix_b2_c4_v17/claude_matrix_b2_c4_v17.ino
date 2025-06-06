@@ -1,5 +1,5 @@
 /**********************************************************************
- * Filename    : claude_matrix_b2_c4_v15.ino
+ * Filename    : claude_matrix_b2_c4_v19.ino
  * Description : Enhanced Pin-by-pin verification diagnostic for ESP32-S3 HUB75 Matrix connection
  * Author      : Rudy Martin / Next Shift Consulting - AUTO DIAGNOSTIC
  * Project     : Artemis DSAI 2025
@@ -31,7 +31,7 @@
 #define P_B   48 // Address B       - Pin 8 on matrix cable
 #define P_C   47 // Address C       - Pin 9 on matrix cable
 #define P_D   15 // Address D       - Pin 10 on matrix cable (Changed from 5, sensitive ESP32 pin on S3)
-#define P_E   16 // Address E       - Pin 11 on matrix cable (Changed from 15, sensitive ESP32 pin on S3)
+#define P_E   21 // Address E       - Pin 11 on matrix cable (CHANGED: Try GPIO 21 instead of 16)
 
 // Clock Pin (also typically picked up by the library for internal setup)
 // Changed from 36 (a strapping pin) for better practice, though it might work.
@@ -313,15 +313,15 @@ void setupMatrixDisplay() {
   // CRITICAL: 64x64 panel configuration
   mxconfig.gpio.e = P_E;           // E pin MUST be set for 64 rows
   mxconfig.clkphase = false;       // Clock phase
-  mxconfig.driver = HUB75_I2S_CFG::FM6126A;  // Try this driver first
+  mxconfig.driver = HUB75_I2S_CFG::SHIFTREG; // Try SHIFTREG driver instead of FM6126A
   mxconfig.double_buff = true;     // Enable double buffering
-  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_10M; // Try slower speed first
+  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_8M; // Try even slower speed
   
   Serial.println("*** 64x64 DISPLAY SETTINGS ***");
   Serial.printf("Width: %d, Height: %d\n", PANEL_RES_X, PANEL_RES_Y);
-  Serial.printf("E Pin (critical for 64 rows): GPIO %d\n", P_E);
-  Serial.printf("Driver: FM6126A\n");
-  Serial.printf("Clock Speed: 10MHz\n");
+  Serial.printf("E Pin (critical for 64 rows): GPIO %d (CHANGED FROM 16 TO 21)\n", P_E);
+  Serial.printf("Driver: SHIFTREG (changed from FM6126A)\n");
+  Serial.printf("Clock Speed: 8MHz (slower for stability)\n");
   
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
   
