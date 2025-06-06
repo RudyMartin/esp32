@@ -39,8 +39,6 @@ From blinking LEDs to real-time decision-making agents, you'll learn how to comb
 
 This repository supports the book _Tips, Tricks, and Traps for ESP32 AI Agent Systems_. It provides hands-on code examples, lab walkthroughs, and system schematics for designing intelligent embedded systems using the ESP32.
 
-For inquiries about the upcoming book reach out to [Rudy Martin](https://nextshiftconsulting.com/)
-
 
 ---
 ## 📚 Reference
@@ -71,6 +69,8 @@ From basic blinking LEDs to advanced sensor-aware AI agents, each project is mod
 - Reusable templates and function-driven coding patterns
 
 ---
+
+For inquiries about the upcoming book or consulting services reach out to [Rudy Martin](https://nextshiftconsulting.com/)
 
 
 
