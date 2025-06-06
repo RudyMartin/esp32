@@ -33,13 +33,13 @@
 #define P_A   45 // Pin 7 on matrix cable
 #define P_B   48 // Pin 8 on matrix cable
 #define P_C   47 // Pin 9 on matrix cable
-#define P_D   15 // Pin 10 on matrix cable (Changed from 21: avoiding sensitive flash pin)
-#define P_E   16 // Pin 11 on matrix cable (Changed from 14: avoiding sensitive JTAG pin)
+#define P_D   16 // Pin 10 on matrix cable (Changed from 21: avoiding sensitive flash pin)
+#define P_E   17 // Pin 11 on matrix cable (Changed from 14: avoiding sensitive JTAG pin)
 
 // Control Pins
-#define P_LAT 17 // Pin 13 on matrix cable (Changed from 2: avoiding UART TX)
+#define P_LAT 36 // Pin 13 on matrix cable (Changed from 2: avoiding UART TX)
 #define P_OE  18 // Pin 14 on matrix cable (Changed from 1: avoiding UART RX)
-#define P_CLK 19 // Pin 15 on matrix cable (Changed from 36: using a general purpose GPIO)
+#define P_CLK 35 // Pin 15 on matrix cable (Changed from 36: using a general purpose GPIO)
 
 // Compatibility aliases for the rest of the code
 #define R1_PIN P_R1
@@ -58,6 +58,7 @@
 #define CLK_PIN P_CLK
 
 // Matrix configuration
+// Nuclear option test at smaller grid (without E pin)
 #define PANEL_RES_X 64
 #define PANEL_RES_Y 64
 #define PANEL_CHAIN 1
