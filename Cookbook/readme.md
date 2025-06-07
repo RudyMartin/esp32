@@ -1,1 +1,1 @@
-**Folder for different Experiments Using the Tensorflow-ESP32 tech stak**
+**Recipes folder for different experiments using the Tensorflow-ESP32 tech stack**
