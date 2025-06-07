@@ -1,6 +1,6 @@
 
 # Block Detector – Model Development & Deployment Guide
-### Lab 3 (Morning + Afternoon)
+### Day 3 Learning Session (Morning + Afternoon)
 
 ---
 
