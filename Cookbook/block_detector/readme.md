@@ -1,7 +1,4 @@
-Below is a ready-to-save **`README.md`** for the `block_detector/` repository.
-Copy it into your repo root and you’re set.
 
-````markdown
 # 🧱 Block Detector
 
 Train → Quantize → Benchmark  
