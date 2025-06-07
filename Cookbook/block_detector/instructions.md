@@ -1,53 +1,4 @@
-Below is a tight, **model-only “cookbook”** for your students.
-Everything fits in a single repo folder called **`/block_detector/`** so they can clone-and-go.
 
----
-
-## 1 🔧 Folder Layout & Resources
-
-| Item                    | Path (inside repo)                                                     | Purpose                            |
-| ----------------------- | ---------------------------------------------------------------------- | ---------------------------------- |
-| **Colab notebook**      | `Train_YOLOv8_BlockDetector.ipynb`                                     | One-click training / export        |
-| **Dataset config**      | `datasets/blocks/blocks.yaml`                                          | Points YOLO to images + labels     |
-| **Timing sketch**       | `arduino/ESP32/timing_test.ino`                                        | Measures on-device FPS / ms        |
-| **Hyper-param presets** | `sweeps/fast.yaml`<br>`sweeps/balanced.yaml`<br>`sweeps/accuracy.yaml` | Ready-made sweep configs           |
-| **Model card template** | `model_card.md`                                                        | Students record size, mAP, latency |
-| **Instructions**        | `instructions.md`                                                      | Step-by-step guide below           |
-
-> **Data placement**
-> Put training images in `datasets/blocks/images/` and YOLO-format labels in `datasets/blocks/labels/`.
-> (The `.yaml` already uses relative paths.)
-
----
-
-## 2 🚀 High-Level Plan
-
-1. **Train baseline**
-
-   * Open Colab, run all cells in `Train_YOLOv8_BlockDetector.ipynb`.
-   * Export both PyTorch (`.pt`) and quantized TFLite (`best_int8.tflite`).
-
-2. **Deploy to ESP32-S3**
-
-   * Flash `timing_test.ino`, copy `best_int8.tflite` to SPIFFS/MicroSD, observe latency.
-
-3. **Sweep & Tune**
-
-   * Pick a preset from `/sweeps/`, retrain via Colab (`--cfg sweeps/fast.yaml` etc.).
-   * Re-export → re-flash → measure latency vs accuracy.
-
-4. **Document**
-
-   * Fill out `model_card.md` for the best run.
-   * Commit weights + card back to repo.
-
-All MCP/FSM hooks are outside this exercise; students will drop the final `.tflite` into their `CLASSIFY` state later.
-
----
-
-## 3 📝 `instructions.md` (copy this file verbatim)
-
-````markdown
 # Block Detector – Model Development & Deployment Guide
 ### Lab 3 (Morning + Afternoon)
 
@@ -158,5 +109,4 @@ Congrats! Your custom model is ready for the FSM `CLASSIFY` state.
 * All artifacts version-controlled for later labs.
 * Clean separation: **model dev & deploy only**—integration comes next day.
 
-Ping me if you need the Colab notebook starter code or the Arduino sketch text inline.
 ```
