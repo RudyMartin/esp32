@@ -99,7 +99,6 @@ git push
 
 Congrats! Your custom model is ready for the FSM `CLASSIFY` state.
 
-```
 
 ---
 
@@ -107,6 +106,6 @@ Congrats! Your custom model is ready for the FSM `CLASSIFY` state.
 
 * A **repeatable recipe** students can finish in ~2 hours.
 * All artifacts version-controlled for later labs.
-* Clean separation: **model dev & deploy only**—integration comes next day.
+* Clean separation: **model dev & deploy only**—integration that comes next day.
 
 ```
