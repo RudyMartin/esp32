@@ -1,12 +1,3 @@
-/**********************************************************************
- * Filename    : claude_matrix_b3_c4_v19.ino
- * Description : Enhanced Pin-by-pin verification diagnostic for ESP32-S3 HUB75 Matrix connection
- * Author      : Rudy Martin / Next Shift Consulting - AUTO DIAGNOSTIC
- * Project     : Artemis DSAI 2025
- * Modified    : Jun 6, 2025   
- * PURPOSE     : AUTOMATIC continuous diagnostics with detailed serial output
- * BRANCH.     : Use alternative display drivers WITH time control
- **********************************************************************/
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <FastLED.h>
 
@@ -22,31 +13,24 @@
 // CURRENT WIRING CONFIGURATION - UPDATED FROM OLD CONFIG
 
 // RGB Data Pins (often hardcoded within the PxMatrix library or defined here)
-// #define P_R1  42 // Pin 1 on matrix cable
-// #define P_G1  41 // Pin 2 on matrix cable
-// #define P_B1  40 // Pin 3 on matrix cable
-// #define P_R2  38 // Pin 4 on matrix cable
-// #define P_G2  39 // Pin 5 on matrix cable
-// #define P_B2  37 // Pin 6 on matrix cable
-
-#define P_R1  21 // Move from 42
-#define P_G1  20 // Move from 41  
-#define P_B1  19 // Move from 40
-#define P_R2  13 // Move from 38
-#define P_G2  12 // Move from 39
-#define P_B2  11 // Move from 37
+#define P_R1  42 // Pin 1 on matrix cable
+#define P_G1  41 // Pin 2 on matrix cable
+#define P_B1  40 // Pin 3 on matrix cable
+#define P_R2  38 // Pin 4 on matrix cable
+#define P_G2  39 // Pin 5 on matrix cable
+#define P_B2  37 // Pin 6 on matrix cable
 
 // Address Pins
 #define P_A   45 // Pin 7 on matrix cable
 #define P_B   48 // Pin 8 on matrix cable
 #define P_C   47 // Pin 9 on matrix cable
-#define P_D   15 // Pin 10 
-#define P_E   16 // Pin 11
+#define P_D   15 // Pin 10 on matrix cable (Changed from 21: avoiding sensitive flash pin)
+#define P_E   16 // Pin 11 on matrix cable (Changed from 14: avoiding sensitive JTAG pin)
 
 // Control Pins
-#define P_LAT 36 // Pin 13 on matrix cable (Changed from 2: avoiding UART TX)
-#define P_OE  18 // Pin 14 on matrix cable (Changed from 1: avoiding UART RX)
-#define P_CLK 35 // Pin 15 on matrix cable (Changed from 36: using a general purpose GPIO)
+#define P_LAT 21 // Pin 13 on matrix cable (MOVED from GPIO 17 - not working!)
+#define P_OE  18 // Pin 14 on matrix cable (Working fine)
+#define P_CLK 20 // Pin 15 on matrix cable (MOVED from GPIO 19 - weak signal)
 
 // Compatibility aliases for the rest of the code
 #define R1_PIN P_R1
@@ -65,7 +49,6 @@
 #define CLK_PIN P_CLK
 
 // Matrix configuration
-// Nuclear option test at smaller grid (without E pin)
 #define PANEL_RES_X 64
 #define PANEL_RES_Y 64
 #define PANEL_CHAIN 1
@@ -371,19 +354,38 @@ void handleInitState() {
   
   // Test if pins are available
   if (testPinAvailability()) {
-    Serial.println("Pin test passed - transitioning to driver testing");
+    Serial.println("Pin test passed - now testing GPIO functionality...");
     
-    // DIAGNOSTIC: Test E pin specifically
-    Serial.printf("\n*** TESTING E PIN (GPIO %d) ***\n", P_E);
-    pinMode(P_E, OUTPUT);
-    for (int i = 0; i < 5; i++) {
-      digitalWrite(P_E, HIGH);
-      delay(100);
-      digitalWrite(P_E, LOW);
-      delay(100);
-      Serial.printf("E pin toggle %d complete\n", i+1);
+    // ENHANCED GPIO TEST - Test all data pins individually
+    Serial.println("\n*** TESTING DATA PIN GPIO FUNCTIONALITY ***");
+    int dataPins[] = {P_R1, P_G1, P_B1, P_R2, P_G2, P_B2};
+    String dataNames[] = {"R1", "G1", "B1", "R2", "G2", "B2"};
+    
+    for (int i = 0; i < 6; i++) {
+      Serial.printf("Testing GPIO %d (%s):\n", dataPins[i], dataNames[i].c_str());
+      pinMode(dataPins[i], OUTPUT);
+      
+      // Test rapid blinking to make LED easily visible
+      for (int blink = 0; blink < 5; blink++) {
+        digitalWrite(dataPins[i], HIGH);
+        delay(200);
+        digitalWrite(dataPins[i], LOW);
+        delay(200);
+      }
+      Serial.printf("  GPIO %d (%s) blink test complete - did you see LED activity?\n", dataPins[i], dataNames[i].c_str());
+      
+      // Leave pin HIGH for final check
+      digitalWrite(dataPins[i], HIGH);
+      Serial.printf("  GPIO %d now set HIGH - LED should be ON\n", dataPins[i]);
+      delay(1000);
+      digitalWrite(dataPins[i], LOW);
+      Serial.printf("GPIO %d (%s) test complete\n\n", dataPins[i], dataNames[i].c_str());
     }
-    Serial.println("E pin toggle test finished\n");
+    
+    Serial.println("*** DATA PIN TESTS COMPLETE ***");
+    Serial.println("REPORT RESULTS:");
+    Serial.println("Which GPIO numbers showed LED blinking/activity?");
+    Serial.println("Example: 'GPIO 42, 41, 40 worked, but 38, 39, 37 did not'");
     
     currentState = STATE_TESTING_PINS;
   } else {

@@ -42,6 +42,29 @@ I'll use Option 1a from my previous reply, as it specifically avoids the known p
 // --- PxMatrix Pin Definitions (Based on previous Option 1a - Recommended Safe Pins) ---
 // Remember to connect these to the corresponding pins on your 16-pin HUB75 connector.
 
+--current version 6-6-25
+
+// RGB Data Pins (often hardcoded within the PxMatrix library or defined here)
+#define P_R1  42 // Pin 1 on matrix cable
+#define P_G1  41 // Pin 2 on matrix cable
+#define P_B1  40 // Pin 3 on matrix cable
+#define P_R2  38 // Pin 4 on matrix cable
+#define P_G2  39 // Pin 5 on matrix cable
+#define P_B2  37 // Pin 6 on matrix cable
+
+// Address Pins
+#define P_A   45 // Pin 7 on matrix cable
+#define P_B   48 // Pin 8 on matrix cable
+#define P_C   47 // Pin 9 on matrix cable
+#define P_D   15 // Pin 10 on matrix cable (Changed from 21: avoiding sensitive flash pin)
+#define P_E   16 // Pin 11 on matrix cable (Changed from 14: avoiding sensitive JTAG pin)
+
+// Control Pins
+#define P_LAT 21 // Pin 13 on matrix cable (MOVED from GPIO 17 - not working!)
+#define P_OE  18 // Pin 14 on matrix cable (Working fine)
+#define P_CLK 20 // Pin 15 on matrix cable (MOVED from GPIO 19 - weak signal)
+
+-------
 // RGB Data Pins (often hardcoded within the PxMatrix library or defined here)
 #define P_R1  42 // Pin 1 on matrix cable
 #define P_G1  41 // Pin 2 on matrix cable
@@ -61,6 +84,32 @@ I'll use Option 1a from my previous reply, as it specifically avoids the known p
 #define P_LAT 17 // Pin 13 on matrix cable (Changed from 2: avoiding UART TX)
 #define P_OE  18 // Pin 14 on matrix cable (Changed from 1: avoiding UART RX)
 #define P_CLK 19 // Pin 15 on matrix cable (Changed from 36: using a general purpose GPIO)
+
+// pin by colors structure
+
+// struct PinConfig {
+//   int pin;
+//   String name;
+//   String function;
+//   String ribonColor;
+// };
+
+//   {x, "R1", "Red Upper", "Blue"},      // Pin 1
+//   {x, "G1", "Green Upper", "Green"},   // Pin 2
+//   {x, "B1", "Blue Upper", "Yellow"},   // Pin 3
+//   {x, "R2", "Red Lower", "Orange"},    // Pin 4
+//   {x, "G2", "Green Lower", "Red"},     // Pin 5
+//   {x, "B2", "Blue Lower", "Brown"},    // Pin 6
+//   {x, "A", "Address A", "Black"},      // Pin 7
+//   {x, "B", "Address B", "White"},      // Pin 8
+//   {x, "C", "Address C", "Silver"},     // Pin 9
+//   {x, "D", "Address D", "Purple"},     // Pin 10
+//   {x, "E", "Address E", "Blue"},       // Pin 11
+//   {x, "GND", "Ground", "Green"},       // Pin 12 (Ground)
+//   {x, "LAT", "Latch", "Yellow"},        // Pin 13
+//   {x, "OE", "Output Enable", "Orange"}, // Pin 14
+//   {x, "CLK", "Clock", "Red"},          // Pin 15
+//   {x, "5V", "Power 5V", "Brown"}       // Pin 16 (Power)
 
 
 // // Configuration 3: Huh - not tested ESP32-S3 pins
