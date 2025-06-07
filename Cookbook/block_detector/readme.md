@@ -82,8 +82,8 @@ block_detector/
 | Stage                 | Goal                                        | Outcome                                                   |
 | --------------------- | ------------------------------------------- | --------------------------------------------------------- |
 | **Learning Day 2**             | Use a pre-trained model                     | Immediate success, connects to FSM `CLASSIFY` state       |
-| **Learning Day 3 – Morning**   | **You** train your own YOLOv8-nano          | `.pt` and quantized `.tflite` weights in under 10 minutes |
-| **Learning Day 3 – Afternoon** | Tune for speed vs accuracy                  | Measure latency, document trade-offs in `model_card.md`   |
+| **Learning Day 3 – AM**   | **You** train your own YOLOv8-nano          | `.pt` and quantized `.tflite` weights in under 10 minutes |
+| **Learning Day 3 – PM** | Tune for speed vs accuracy                  | Measure latency, document trade-offs in `model_card.md`   |
 | **Next Labs**         | Integrate tuned model into MCP/FSM pipeline | Autonomous block sorter / mission agent                   |
 
 Happy training & benchmarking!
