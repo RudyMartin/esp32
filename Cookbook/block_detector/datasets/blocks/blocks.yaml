@@ -1,1 +1,20 @@
+# YOLOv8 data config – “Colored Wooden Blocks” dataset
+path: datasets/blocks          # root folder
+train: images/train            # images relative to path
+val:   images/val
+
+# 12 classes = 6 colours × 2 sizes
+names:
+  0: red_small
+  1: red_large
+  2: blue_small
+  3: blue_large
+  4: green_small
+  5: green_large
+  6: yellow_small
+  7: yellow_large
+  8: black_small
+  9: black_large
+  10: white_small
+  11: white_large
 
